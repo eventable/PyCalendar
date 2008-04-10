@@ -32,6 +32,7 @@ from vtimezone import PyCalendarVTimezone
 from vtimezonedaylight import PyCalendarVTimezoneDaylight
 from vtimezonestandard import PyCalendarVTimezoneStandard
 from vtodo import PyCalendarVToDo
+from pycalendar.xmlhelpers import SubElementWithData
 import definitions
 
 class PyCalendar(PyCalendarComponentBase):
@@ -509,6 +510,26 @@ class PyCalendar(PyCalendarComponentBase):
         os.write(definitions.cICalComponent_ENDVCALENDAR)
         os.write("\n")
 
+    def generateXML(self, parent, for_cache = False):
+        # Make sure all required timezones are in this object
+        self.includeTimezones()
+        
+        # Element for component
+        component = SubElementWithData(parent, definitions.cICalComponent_BEGINVCALENDAR[6:].lower())
+        
+        # Write properties (we always handle PRODID & VERSION)
+        properties = SubElementWithData(component, "properties")
+        self.writePropertiesXML(properties)
+        
+        # Write out each type of component (not VALARMS which are embedded in others)
+        # Do VTIMEZONES at the start
+        components = SubElementWithData(component, "components")
+        self.generateXMLDB(components, self.mV[PyCalendar.VTIMEZONE], for_cache)
+        self.generateXMLDB(components, self.mV[PyCalendar.VEVENT], for_cache)
+        self.generateXMLDB(components, self.mV[PyCalendar.VTODO], for_cache)
+        self.generateXMLDB(components, self.mV[PyCalendar.VJOURNAL], for_cache)
+        self.generateXMLDB(components, self.mV[PyCalendar.VFREEBUSY], for_cache)
+        
     # Get components
     def getVEventsDB(self):
         return self.mV[PyCalendar.VEVENT]
@@ -961,6 +982,10 @@ class PyCalendar(PyCalendarComponentBase):
     def generateDB(self, os, components, for_cache):
         for comp in components:
             comp.generate(os, for_cache)
+
+    def generateXMLDB(self, parent, components, for_cache):
+        for comp in components:
+            comp.generateXML(parent, for_cache)
 
     def validProperty(self, prop):
         if prop.getName() == definitions.cICalProperty_VERSION:

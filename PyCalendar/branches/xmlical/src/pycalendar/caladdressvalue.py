@@ -18,10 +18,17 @@
 
 from plaintextvalue import PyCalendarPlainTextValue
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
 
 class PyCalendarCalAddressValue( PyCalendarPlainTextValue ):
 
     def getType( self ):
         return PyCalendarValue.VALUETYPE_CALADDRESS
+
+    def generateXML( self, parent ):
+        try:
+            SubElementWithData(parent, "cal-address", self.mValue )
+        except:
+            pass
 
 PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_CALADDRESS, PyCalendarCalAddressValue)

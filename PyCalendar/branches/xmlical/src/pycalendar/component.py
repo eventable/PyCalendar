@@ -22,6 +22,9 @@ import definitions
 import stringutils
 import time
 
+from xmlhelpers import SubElementWithData
+from xml.etree.ElementTree import Element
+
 class PyCalendarComponent(PyCalendarComponentBase):
 
     uid_ctr = 1
@@ -366,29 +369,57 @@ class PyCalendarComponent(PyCalendarComponentBase):
         os.write("\n")
 
     def generateFiltered(self, os, filter):
-            # Header
-            os.write(self.getBeginDelimiter())
-            os.write("\n")
+        # Header
+        os.write(self.getBeginDelimiter())
+        os.write("\n")
 
-            # Write each property
-            self.writePropertiesFiltered(os, filter)
+        # Write each property
+        self.writePropertiesFiltered(os, filter)
 
-            # Write each embedded component
-            if self.mEmbedded != None:
-                # Shortcut for alll sub-components
-                if filter.isAllSubComponents():
-                    for iter in self.mEmbedded:
-                        iter.generate(os, False)
-                elif filter.hasSubComponentFilters():
-                    for iter in self.mEmbedded:
-                        subcomp = iter
-                        subfilter = filter.getSubComponentFilter(self.getType())
-                        if subfilter != None:
-                            subcomp.generateFiltered(os, subfilter)
+        # Write each embedded component
+        if self.mEmbedded != None:
+            # Shortcut for alll sub-components
+            if filter.isAllSubComponents():
+                for iter in self.mEmbedded:
+                    iter.generate(os, False)
+            elif filter.hasSubComponentFilters():
+                for iter in self.mEmbedded:
+                    subcomp = iter
+                    subfilter = filter.getSubComponentFilter(self.getType())
+                    if subfilter != None:
+                        subcomp.generateFiltered(os, subfilter)
 
-            # Footer
-            os.write(self.getEndDelimiter())
-            os.write("\n")
+        # Footer
+        os.write(self.getEndDelimiter())
+        os.write("\n")
+
+    def generateXML(self, parent, for_cache):
+        """
+        Generate XML representation.
+
+        @param parent: parent XML element node
+        @type parent:
+        """
+        
+        # Element for component
+        component = SubElementWithData(parent, self.getBeginDelimiter()[6:].lower())
+
+        # Write each property
+        properties = SubElementWithData(component, "properties")
+        self.writePropertiesXML(properties)
+
+        # Do private properties if caching
+        if for_cache:
+            if self.mRURL:
+                SubElementWithData(properties, definitions.cICalProperty_X_PRIVATE_RURL.lower(), self.mRURL)
+            if self.mETag:
+                SubElementWithData(properties, definitions.cICalProperty_X_PRIVATE_ETAG.lower(), self.mETag)
+
+        # Write each embedded component
+        if self.mEmbedded != None:
+            components = SubElementWithData(component, "components")
+            for iter in self.mEmbedded:
+                iter.generateXML(os, components)
 
     def getTimezones(self, tzids):
         # Look for all date-time properties

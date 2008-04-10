@@ -18,6 +18,7 @@
 
 from plaintextvalue import PyCalendarPlainTextValue
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
 import utils
 
 class PyCalendarTextValue( PyCalendarPlainTextValue ):
@@ -36,6 +37,13 @@ class PyCalendarTextValue( PyCalendarPlainTextValue ):
             utils.writeTextValue( os, self.mValue )
         except:
             pass
+
+    def generateXML( self, parent ):
+        try:
+            SubElementWithData(parent, "text", self.mValue )
+        except:
+            pass
+
 
 PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_TEXT, PyCalendarTextValue)
     

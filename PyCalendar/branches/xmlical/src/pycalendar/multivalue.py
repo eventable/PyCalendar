@@ -63,5 +63,12 @@ class PyCalendarMultiValue( PyCalendarValue ):
         except:
             pass
 
+    def generateXML( self, parent ):
+        try:
+            for iter in self.mValues:
+                iter.generateXML(parent)
+        except:
+            pass
+
 PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_MULTIVALUE, PyCalendarMultiValue)
             

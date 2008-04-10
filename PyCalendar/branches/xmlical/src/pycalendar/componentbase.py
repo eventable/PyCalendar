@@ -18,6 +18,7 @@ from datetimevalue import PyCalendarDateTimeValue
 from periodvalue import PyCalendarPeriodValue
 from property import PyCalendarProperty
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
 
 class PyCalendarComponentBase(object):
 
@@ -68,6 +69,9 @@ class PyCalendarComponentBase(object):
         raise NotImplemented
 
     def generateFiltered(self, os, filter):
+        raise NotImplemented
+
+    def generateXML(self, parent, for_cache):
         raise NotImplemented
 
     def loadValue(self, value_name):
@@ -190,6 +194,15 @@ class PyCalendarComponentBase(object):
                 for prop in props:
                     prop.generateFiltered(os, filter)
 
+    def writePropertiesXML(self, parent):
+        # Sort properties by name
+        keys = self.mProperties.keys()
+        keys.sort()
+        for key in keys:
+            props = self.mProperties[key]
+            for prop in props:
+                prop.generateXML(parent)
+    
     def loadPrivateValue(self, value_name):
         # Read it in from properties list and then delete the property from the
         # main list

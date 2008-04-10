@@ -16,6 +16,8 @@
 
 from recurrence import PyCalendarRecurrence
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
+import StringIO
 
 class PyCalendarRecurrenceValue( PyCalendarValue ):
 
@@ -35,6 +37,9 @@ class PyCalendarRecurrenceValue( PyCalendarValue ):
 
     def generate( self, os ):
         self.mValue.generate( os )
+
+    def generateXML( self, parent ):
+        self.mValue.generateXML(parent)
 
     def getValue( self ):
         return self.mValue

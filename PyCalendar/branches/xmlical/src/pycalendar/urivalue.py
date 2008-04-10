@@ -18,11 +18,18 @@
 
 from plaintextvalue import PyCalendarPlainTextValue
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
 
 class PyCalendarURIValue( PyCalendarPlainTextValue ):
 
     def getType(self):
         return PyCalendarURIValue.VALUETYPE_URI
+
+    def generateXML( self, parent ):
+        try:
+            SubElementWithData(parent, "uri", self.mValue)
+        except:
+            pass
 
 PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_URI, PyCalendarURIValue)
 

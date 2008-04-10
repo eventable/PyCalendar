@@ -43,6 +43,7 @@ __all__ = [
     "vevent",
     "vfreebusy",
     "stringutils"
+    "xmlhelpers"
 ]
 
 # Import these to register the values

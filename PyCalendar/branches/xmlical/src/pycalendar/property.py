@@ -32,6 +32,7 @@ from recurrencevalue import PyCalendarRecurrenceValue
 from urivalue import PyCalendarURIValue
 from utcoffsetvalue import PyCalendarUTCOffsetValue
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
 import definitions
 import stringutils
 
@@ -309,6 +310,31 @@ class PyCalendarProperty(object):
                     start = offset
     
         os.write("\n")
+    
+    def generateXML(self, parent):
+
+        # Write it out always with value
+        self.generateXMLValue(parent, False)
+
+
+    # Write out the actual property, possibly skipping the value
+    def generateXMLValue(self, parent, novalue):
+
+        self.setupValueAttribute()
+
+        property = SubElementWithData(parent, self.mName.lower())
+
+        # Write all attributes
+        if self.mAttributes:
+            parameters = SubElementWithData(property, "parameters")
+            for attrs in self.mAttributes.values():
+                for attr in attrs:
+                    attr.generateXML(parameters)
+
+        # Write value
+        if self.mValue and not novalue:
+            values = SubElementWithData(property, "values")
+            self.mValue.generateXML(values)
     
     def _init_PyCalendarProperty(self):
         self.mName = ""

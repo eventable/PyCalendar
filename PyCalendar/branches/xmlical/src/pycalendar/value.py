@@ -67,3 +67,6 @@ class PyCalendarValue(object):
     def generate(self, os):
         raise NotImplemented
     
+    def generateXML(self, parent):
+        raise NotImplemented
+    

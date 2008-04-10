@@ -13,6 +13,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 ##
+from pycalendar.xmlhelpers import SubElementWithData
 
 """
 ICalendar attribute.
@@ -98,3 +99,15 @@ class PyCalendarAttribute(object):
             os.write( "\"%s\"" % (str,) )
         else:
             os.write( str )
+
+    def generateXML( self, parent ):
+        try:
+            if self.mValues is None:
+                SubElementWithData(parent, self.mName.lower(), self.mValue )
+            else:
+                for s in self.mValues:
+                    SubElementWithData(parent, self.mName.lower(), s )
+        except:
+            # We ignore errors
+            pass
+    

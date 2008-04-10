@@ -17,6 +17,7 @@
 # iCalendar UTC Offset value
 
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
 
 class PyCalendarDummyValue( PyCalendarValue ):
 
@@ -38,6 +39,12 @@ class PyCalendarDummyValue( PyCalendarValue ):
     def generate( self, os ):
         try:
             os.write( self.mValue )
+        except:
+            pass
+
+    def generateXML( self, parent ):
+        try:
+            SubElementWithData(parent, self.mType.lower(), self.mValue)
         except:
             pass
 

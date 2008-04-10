@@ -16,6 +16,8 @@
 
 from duration import PyCalendarDuration
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
+import StringIO
 
 class PyCalendarDurationValue(PyCalendarValue):
 
@@ -35,6 +37,14 @@ class PyCalendarDurationValue(PyCalendarValue):
 
     def generate(self, os):
         self.mValue.generate(os)
+
+    def generateXML( self, parent ):
+        try:
+            sout = StringIO.StringIO()
+            self.mValue.generate(sout)
+            SubElementWithData(parent, "duration", sout.getvalue())
+        except:
+            pass
 
     def getValue(self):
         return self.mValue

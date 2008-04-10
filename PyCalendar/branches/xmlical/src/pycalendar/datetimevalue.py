@@ -16,6 +16,7 @@
 
 from datetime import PyCalendarDateTime
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
 
 class PyCalendarDateTimeValue(PyCalendarValue):
 
@@ -35,6 +36,9 @@ class PyCalendarDateTimeValue(PyCalendarValue):
 
     def generate(self, os):
         self.mValue.generate(os)
+
+    def generateXML( self, parent ):
+        self.mValue.generateXML(parent)
 
     def getValue(self):
         return self.mValue

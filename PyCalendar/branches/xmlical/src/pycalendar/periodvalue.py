@@ -16,6 +16,8 @@
 
 from period import PyCalendarPeriod
 from value import PyCalendarValue
+from pycalendar.xmlhelpers import SubElementWithData
+import StringIO
 
 class PyCalendarPeriodValue( PyCalendarValue ):
 
@@ -35,6 +37,14 @@ class PyCalendarPeriodValue( PyCalendarValue ):
 
     def generate( self, os ):
         self.mValue.generate( os )
+
+    def generateXML( self, parent ):
+        try:
+            sout = StringIO.StringIO()
+            self.mValue.generate(sout)
+            SubElementWithData(parent, "period", sout.getvalue())
+        except:
+            pass
 
     def getValue( self ):
         return self.mValue

@@ -15,6 +15,7 @@
 ##
 
 import cStringIO as StringIO
+from pycalendar.xmlhelpers import SubElementWithData
 import time
 
 from duration import PyCalendarDuration
@@ -837,6 +838,21 @@ class PyCalendarDateTime(object):
     def generate( self, os ):
         try:
             os.write( self.getText() )
+        except:
+            pass
+
+    def generateXML( self, parent ):
+        try:
+            top = SubElementWithData(parent, "date" if self.isDateOnly() else "date-time")
+            SubElementWithData(top, "year", str(self.mYear))
+            SubElementWithData(top, "month", str(self.mMonth))
+            SubElementWithData(top, "day", str(self.mDay))
+            if not self.isDateOnly():
+                SubElementWithData(top, "hour", str(self.mHours))
+                SubElementWithData(top, "minute", str(self.mMinutes))
+                SubElementWithData(top, "second", str(self.mSeconds))
+                if self.utc():
+                    SubElementWithData(top, "utc")                
         except:
             pass
 
