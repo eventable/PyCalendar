@@ -21,15 +21,15 @@ from value import PyCalendarValue
 
 class PyCalendarComponentBase(object):
 
-    def __init__(self, copyit=None):
-        if copyit:
-            self.mProperties = {}
-            for propname, props in copyit.mProperties.iteritems():
-                for prop in props:
-                    self.mProperties.setdefault(propname, []).append(PyCalendarProperty(prop))
-        else:
-            self.mProperties = {}
+    def __init__(self):
+        self.mProperties = {}
 
+    def duplicate(self, *args):
+        other = self.__class__(*args)
+        for propname, props in self.mProperties.iteritems():
+            other.mProperties[propname] = [i.duplicate() for i in props]
+        return other
+        
     def getProperties(self):
         return self.mProperties
 

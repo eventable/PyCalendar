@@ -32,14 +32,11 @@ class PyCalendarVTimezoneDaylight(PyCalendarVTimezoneElement):
     def getVEnd():
         return PyCalendarVTimezoneDaylight.sEndDelimiter
 
-    def __init__(self, calendar=None, copyit=None):
-        if calendar is not None:
-            super(PyCalendarVTimezoneDaylight, self).__init__(calendar=calendar)
-        elif copyit is not None:
-            super(PyCalendarVTimezoneDaylight, self).__init__(copyit=copyit)
+    def __init__(self, calendar):
+        super(PyCalendarVTimezoneDaylight, self).__init__(calendar=calendar)
 
-    def clone_it(self):
-        return PyCalendarVTimezoneDaylight(copyit=self)
+    def duplicate(self, calendar):
+        return super(PyCalendarVTimezoneDaylight, self).duplicate(calendar)
 
     def getType(self):
         return PyCalendarComponent.eVTIMEZONEDAYLIGHT

@@ -61,55 +61,54 @@ class PyCalendarComponentRecur(PyCalendarComponent):
         else:
             return e1.self.mStart < e2.self.mStart
 
-    def __init__(self, calendar=None, copyit=None):
-        if calendar is not None:
-            super(PyCalendarComponentRecur, self).__init__(calendar=calendar)
-            self.mMaster = self
-            self.mMapKey = None
-            self.mSummary = None
-            self.mStamp = PyCalendarDateTime()
-            self.mHasStamp = False
-            self.mStart = PyCalendarDateTime()
-            self.mHasStart = False
-            self.mEnd = PyCalendarDateTime()
-            self.mHasEnd = False
-            self.mDuration = False
-            self.mHasRecurrenceID = False
-            self.mAdjustFuture = False
-            self.mAdjustPrior = False
-            self.mRecurrenceID = None
-            self.mRecurrences = None
-        elif copyit is not None:
-            super(PyCalendarComponentRecur, self).__init__(copyit)
-    
-            # Special determination of master
-            if copyit.recurring():
-                self.mMaster = copyit.mMaster
-            else:
-                self.mMaster = self
-    
-            self.mMapKey = copyit.mMapKey
-    
-            self.mSummary = copyit.mSummary
-    
-            if (copyit.mStamp != None):
-                self.mStamp = PyCalendarDateTime(copyit=copyit.mStamp)
-            self.mHasStamp = copyit.mHasStamp
-    
-            self.mStart = PyCalendarDateTime(copyit=copyit.mStart)
-            self.mHasStart = copyit.mHasStart
-            self.mEnd = PyCalendarDateTime(copyit=copyit.mEnd)
-            self.mHasEnd = copyit.mHasEnd
-            self.mDuration = copyit.mDuration
-    
-            self.mHasRecurrenceID = copyit.mHasRecurrenceID
-            self.mAdjustFuture = copyit.mAdjustFuture
-            self.mAdjustPrior = copyit.mAdjustPrior
-            if copyit.mRecurrenceID != None:
-                self.mRecurrenceID = PyCalendarDateTime(copyit=copyit.mRecurrenceID)
-    
-            if copyit.mRecurrences != None:
-                self.mRecurrences = PyCalendarRecurrenceSet(copyit=copyit.mRecurrences)
+    def __init__(self, calendar):
+        super(PyCalendarComponentRecur, self).__init__(calendar=calendar)
+        self.mMaster = self
+        self.mMapKey = None
+        self.mSummary = None
+        self.mStamp = PyCalendarDateTime()
+        self.mHasStamp = False
+        self.mStart = PyCalendarDateTime()
+        self.mHasStart = False
+        self.mEnd = PyCalendarDateTime()
+        self.mHasEnd = False
+        self.mDuration = False
+        self.mHasRecurrenceID = False
+        self.mAdjustFuture = False
+        self.mAdjustPrior = False
+        self.mRecurrenceID = None
+        self.mRecurrences = None
+
+    def duplicate(self, calendar):
+        other = super(PyCalendarComponentRecur, self).duplicate(calendar)
+
+        # Special determination of master
+        other.mMaster = self.mMaster if self.recurring() else self
+
+        other.mMapKey = self.mMapKey
+
+        other.mSummary = self.mSummary
+
+        if (self.mStamp is not None):
+            other.mStamp = self.mStamp.duplicate()
+        other.mHasStamp = self.mHasStamp
+
+        other.mStart = self.mStart.duplicate()
+        other.mHasStart = self.mHasStart
+        other.mEnd = self.mEnd.duplicate()
+        other.mHasEnd = self.mHasEnd
+        other.mDuration = self.mDuration
+
+        other.mHasRecurrenceID = self.mHasRecurrenceID
+        other.mAdjustFuture = self.mAdjustFuture
+        other.mAdjustPrior = self.mAdjustPrior
+        if self.mRecurrenceID is not None:
+            other.mRecurrenceID = self.mRecurrenceID.duplicate()
+
+        if self.mRecurrences is not None:
+            other.mRecurrences = self.mRecurrences.duplicate()
+        
+        return other
 
     def canGenerateInstance(self):
         return not self.mHasRecurrenceID
@@ -237,7 +236,7 @@ class PyCalendarComponentRecur(PyCalendarComponent):
             else:
                 # If no end or duration then use the start
                 self.mHasEnd = False
-                self.mEnd = PyCalendarDateTime(copyit=self.mStart)
+                self.mEnd = self.mStart.duplicate()
                 self.mDuration = False
         else:
             self.mHasEnd = True
@@ -300,7 +299,7 @@ class PyCalendarComponentRecur(PyCalendarComponent):
         # End is always greater than start if start exists
         if self.mHasStart and self.mEnd <= self.mStart:
             # Use the start
-            self.mEnd = PyCalendarDateTime(copyit=self.mStart)
+            self.mEnd = self.mStart.duplicate()
             self.mDuration = False
 
             # Adjust to approriate non-inclusive end point
@@ -477,7 +476,7 @@ class PyCalendarComponentRecur(PyCalendarComponent):
         self.addProperty(prop)
 
         # If its an all day event and the end one day after the start, ignore it
-        temp = PyCalendarDateTime(copyit=start)
+        temp = start.duplicate()
         temp.offsetDay(1)
         if not start.isDateOnly() or end != temp:
             prop = PyCalendarProperty(definitions.cICalProperty_DTEND, end)

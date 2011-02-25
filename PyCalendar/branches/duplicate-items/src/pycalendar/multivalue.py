@@ -18,14 +18,15 @@ from value import PyCalendarValue
 
 class PyCalendarMultiValue( PyCalendarValue ):
 
-    def __init__( self, type = None, copyit = None ):
+    def __init__( self, type ):
 
-        if type:
-            self.mType = type
-            self.mValues = []
-        elif copyit:
-            self.mType = copyit.mType
-            self.mValues = [i.copy() for i in copyit.mValues]
+        self.mType = type
+        self.mValues = []
+
+    def duplicate(self):
+        other = PyCalendarMultiValue(self.mType)
+        other.mValues = [i.duplicate() for i in self.mValues]
+        return other
 
     def getType( self ):
         return self.mType

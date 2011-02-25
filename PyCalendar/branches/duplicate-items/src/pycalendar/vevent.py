@@ -34,16 +34,14 @@ class PyCalendarVEvent(PyCalendarComponentRecur):
     def getVEnd():
         return PyCalendarVEvent.sEndDelimiter
 
-    def __init__(self, calendar = None, copyit = None):
-        if calendar is not None:
-            super(PyCalendarVEvent, self).__init__(calendar=calendar)
-            self.mStatus = definitions.eStatus_VEvent_None
-        elif copyit is not None:
-            super(PyCalendarVEvent, self).__init__(copyit=copyit)
-            self.mStatus = copyit.mStatus
+    def __init__(self, calendar):
+        super(PyCalendarVEvent, self).__init__(calendar=calendar)
+        self.mStatus = definitions.eStatus_VEvent_None
 
-    def clone_it(self):
-        return PyCalendarVEvent(copyit=self)
+    def duplicate(self, calendar):
+        other = super(PyCalendarVEvent, self).duplicate(calendar)
+        other.mStatus = self.mStatus
+        return other
 
     def getType(self):
         return PyCalendarComponent.eVEVENT

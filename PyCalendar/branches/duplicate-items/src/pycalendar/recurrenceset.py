@@ -19,21 +19,23 @@ from utils import set_difference
 
 class PyCalendarRecurrenceSet(object):
 
-    def __init__(self, copyit=None):
-        if copyit is None:
-            self.mRrules = []
-            self.mExrules = []
-            self.mRdates = []
-            self.mExdates = []
-            self.mRperiods = []
-            self.mExperiods = []
-        else:
-            self.mRrules = copyit.self.mRrules
-            self.mExrules = copyit.self.mExrules
-            self.mRdates = copyit.self.mRdates
-            self.mExdates = copyit.self.mExdates
-            self.mRperiods = copyit.self.mRperiods
-            self.mExperiods = copyit.self.mExperiods
+    def __init__(self):
+        self.mRrules = []
+        self.mExrules = []
+        self.mRdates = []
+        self.mExdates = []
+        self.mRperiods = []
+        self.mExperiods = []
+
+    def duplicate(self):
+        other = PyCalendarRecurrenceSet()
+        other.mRrules = [i.duplicate() for i in self.mRrules]
+        other.mExrules = [i.duplicate() for i in self.mExrules]
+        other.mRdates = [i.duplicate() for i in self.mRdates]
+        other.mExdates = [i.duplicate() for i in self.mExdates]
+        other.mRperiods = [i.duplicate() for i in self.mRperiods]
+        other.mExperiods = [i.duplicate() for i in self.mExperiods]
+        return other
 
     def hasRecurrence(self):
         return ((len(self.mRrules) != 0) or (len(self.mRdates) != 0) or (len(self.mRperiods) != 0)

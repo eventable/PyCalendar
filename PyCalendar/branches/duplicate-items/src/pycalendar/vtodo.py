@@ -100,24 +100,22 @@ class PyCalendarVToDo(PyCalendarComponentRecur):
         # Just use start time - older ones at the top
         return s1.mStart < s2.mStart
 
-    def __init__(self, calendar=None, copyit=None):
-        if calendar is not None:
-            super(PyCalendarVToDo, self).__init__(calendar=calendar)
-            self.mPriority = 0
-            self.mStatus = definitions.eStatus_VToDo_None
-            self.mPercentComplete = 0
-            self.mCompleted = PyCalendarDateTime()
-            self.mHasCompleted = False
-        elif copyit is not None:
-            super(PyCalendarVToDo, self).__init__(copyit=copyit)
-            self.mPriority = copyit.mPriority
-            self.mStatus = copyit.mStatus
-            self.mPercentComplete = copyit.mPercentComplete
-            self.mCompleted = PyCalendarDateTime(copyit=copyit.mCompleted)
-            self.mHasCompleted = copyit.mHasCompleted
+    def __init__(self, calendar):
+        super(PyCalendarVToDo, self).__init__(calendar=calendar)
+        self.mPriority = 0
+        self.mStatus = definitions.eStatus_VToDo_None
+        self.mPercentComplete = 0
+        self.mCompleted = PyCalendarDateTime()
+        self.mHasCompleted = False
 
-    def clone_it(self):
-        return PyCalendarVToDo(copyit=self)
+    def duplicate(self, calendar):
+        other = super(PyCalendarVToDo, self).duplicate(calendar)
+        other.mPriority = self.mPriority
+        other.mStatus = self.mStatus
+        other.mPercentComplete = self.mPercentComplete
+        other.mCompleted = self.mCompleted.duplicate()
+        other.mHasCompleted = self.mHasCompleted
+        return other
 
     def getType(self):
         return PyCalendarComponent.eVTODO
@@ -297,7 +295,7 @@ class PyCalendarVToDo(PyCalendarComponentRecur):
         self.mHasCompleted = False
 
         # Always UTC
-        self.mCompleted = PyCalendarDateTime(copyit=completed)
+        self.mCompleted = completed.duplicate()
         self.mCompleted.adjustToUTC()
         self.mHasCompleted = True
         prop = PyCalendarProperty(definitions.cICalProperty_STATUS_COMPLETED, self.mCompleted)

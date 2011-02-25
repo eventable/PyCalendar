@@ -19,13 +19,11 @@ from value import PyCalendarValue
 
 class PyCalendarDateTimeValue(PyCalendarValue):
 
-    def __init__(self, value = None, copyit = None):
-        if value:
-            self.mValue = value
-        elif copyit:
-            self.mValue = PyCalendarDateTime(copyit=copyit.mValue)
-        else:
-            self.mValue = PyCalendarDateTime()
+    def __init__(self, value = None):
+        self.mValue = value if value is not None else PyCalendarDateTime()
+
+    def duplicate(self):
+        return PyCalendarDateTimeValue(self.mValue.duplicate())
 
     def getType(self):
         return  (PyCalendarValue.VALUETYPE_DATETIME, PyCalendarValue.VALUETYPE_DATE)[self.mValue.isDateOnly()]

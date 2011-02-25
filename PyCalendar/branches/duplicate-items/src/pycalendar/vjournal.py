@@ -33,14 +33,11 @@ class PyCalendarVJournal(PyCalendarComponentRecur):
     def getVEnd():
         return PyCalendarVJournal.sEndDelimiter
 
-    def __init__(self, calendar=None, copyit=None):
-        if calendar is not None:
-            super(PyCalendarVJournal, self).__init__(calendar=calendar)
-        elif copyit is not None:
-            super(PyCalendarVJournal, self).__init__(copyit=copyit)
+    def __init__(self, calendar):
+        super(PyCalendarVJournal, self).__init__(calendar=calendar)
 
-    def clone_it(self):
-        return PyCalendarVJournal(copyit=self)
+    def duplicate(self, calendar):
+        return super(PyCalendarVJournal, self).duplicate(calendar)
 
     def getType(self):
         return PyCalendarComponent.eVJOURNAL

@@ -45,7 +45,7 @@ class PyCalendarDateTime(object):
 
         return e1.compareDateTime(e2)
 
-    def __init__( self, year = None, month = None, day = None, hours = None, minutes = None, seconds = None, tzid = None, packed = None, copyit = None ):
+    def __init__( self, year = None, month = None, day = None, hours = None, minutes = None, seconds = None, tzid = None, packed = None ):
         
         self.mYear = 1970
         self.mMonth = 1
@@ -90,23 +90,20 @@ class PyCalendarDateTime(object):
                 self.mTZID = tzid.getTimezoneID()
     
             self.normalise()
-        elif (copyit is not None):
-            self.mYear = copyit.mYear
-            self.mMonth = copyit.mMonth
-            self.mDay = copyit.mDay
     
-            self.mHours = copyit.mHours
-            self.mMinutes = copyit.mMinutes
-            self.mSeconds = copyit.mSeconds
-    
-            self.mDateOnly = copyit.mDateOnly
-    
-            self.mTZUTC = copyit.mTZUTC
-            self.mTZID = copyit.mTZID
-    
-            self.mPosixTimeCached = copyit.mPosixTimeCached
-            self.mPosixTime = copyit.mPosixTime
-    
+    def duplicate(self):
+        other = PyCalendarDateTime(self.mYear, self.mMonth, self.mDay, self.mHours, self.mMinutes, self.mSeconds)
+
+        other.mDateOnly = self.mDateOnly
+
+        other.mTZUTC = self.mTZUTC
+        other.mTZID = self.mTZID
+
+        other.mPosixTimeCached = self.mPosixTimeCached
+        other.mPosixTime = self.mPosixTime
+        
+        return other
+        
     def __repr__(self):
         return self.getText()
 
@@ -116,7 +113,7 @@ class PyCalendarDateTime(object):
     # Operators
     def __add__( self, duration ):
         # Add duration seconds to temp object and normalise it
-        result = PyCalendarDateTime(copyit=self)
+        result = self.duplicate()
         result.mSeconds += duration.getTotalSeconds()
         result.changed()
         result.normalise()
@@ -126,8 +123,8 @@ class PyCalendarDateTime(object):
         # Look for floating
         if self.floating() or date.floating():
             # Adjust the floating ones to fixed
-            copy1 = PyCalendarDateTime(copyit=self)
-            copy2 = PyCalendarDateTime(copyit=date)
+            copy1 = self.duplicate()
+            copy2 = date.duplicate()
 
             if copy1.floating() and copy2.floating():
                 # Set both to UTC and do comparison
@@ -488,7 +485,7 @@ class PyCalendarDateTime(object):
 
         # Create temp date-time with the appropriate parameters and then
         # compare
-        temp = PyCalendarDateTime(copyit=self)
+        temp = self.duplicate()
         temp.setDayOfWeekInMonth( offset, day )
 
         # Now compare dates
@@ -611,7 +608,7 @@ class PyCalendarDateTime(object):
     #def getAdjustedTime( self, tzid = PyCalendarManager.sPyCalendarManager.getDefaultTimezone() ):
     def getAdjustedTime( self, tzid = None ):
         # Copy this and adjust to input timezone
-        adjusted = PyCalendarDateTime(copyit=self)
+        adjusted = self.duplicate()
         adjusted.adjustTimezone( tzid )
         return adjusted
 

@@ -51,19 +51,15 @@ class PyCalendarValue(object):
         else:
             return clz._typeMap.get("DUMMY")(type)
     
-    def copy(self):
-        classType = PyCalendarValue._typeMap.get(self.getRealType(), None)
-        return classType(copyit=self)
-
     def getType(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def getRealType(self):
         return self.getType()
 
     def parse(self, data):
-        raise NotImplemented
+        raise NotImplementedError
     
     def generate(self, os):
-        raise NotImplemented
+        raise NotImplementedError
     

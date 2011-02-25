@@ -18,7 +18,7 @@ import re
 
 class PyCalendarDuration(object):
 
-    def __init__(self, duration=None, copyit=None):
+    def __init__(self, duration = None):
         self.mForward = True
 
         self.mWeeks = 0
@@ -28,17 +28,21 @@ class PyCalendarDuration(object):
         self.mMinutes = 0
         self.mSeconds = 0
         
-        if (duration is not None):
+        if duration is not None:
             self.setDuration(duration)
-        elif (copyit is not None):
-            self.mForward = copyit.mForward
-    
-            self.mWeeks = copyit.mWeeks
-            self.mDays = copyit.mDays
-    
-            self.mHours = copyit.mHours
-            self.mMinutes = copyit.mMinutes
-            self.mSeconds = copyit.mSeconds
+
+    def duplicate(self):
+        other = PyCalendarDuration(None)
+        other.mForward = self.mForward
+
+        other.mWeeks = self.mWeeks
+        other.mDays = self.mDays
+
+        other.mHours = self.mHours
+        other.mMinutes = self.mMinutes
+        other.mSeconds = self.mSeconds
+
+        return other
 
     def getTotalSeconds(self):
         return [1, -1][not self.mForward] \

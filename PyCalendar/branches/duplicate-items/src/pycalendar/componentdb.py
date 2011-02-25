@@ -15,24 +15,24 @@
 ##
 
 from componentrecur import PyCalendarComponentRecur
-from datetime import PyCalendarDateTime
 
 class PyCalendarComponentDB(object):
 
-    def __init__(self, copyit=None):
+    def __init__(self):
         self.mItems = {}
-        if copyit:
-            self.mRecurMap = None
-            if (copyit.mRecurMap != None):
-                self.mRecurMap = {}
-                for key, value in copyit.mRecurMap.items():
-                    list = []
-                    for item in value:
-                        list.append(PyCalendarDateTime(copyit=item))
-                    self.mRecurMap[key] = list
-        else:
-            self.mRecurMap = None
+        self.mRecurMap = None
 
+    def duplicate(self, calendar):
+        other = PyCalendarComponentDB()
+        for name, component in self.mItems.items():
+            other.mItems[name] = component.duplicate(calendar)
+        self.mRecurMap = None
+        if self.mRecurMap != None:
+            other.mRecurMap = {}
+            for key, value in self.mRecurMap.items():
+                other.mRecurMap[key] = [item.duplicate() for item in value]
+        return other
+        
     def __iter__(self):
         return self.mItems.itervalues()
 
