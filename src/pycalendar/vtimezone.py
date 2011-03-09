@@ -32,18 +32,16 @@ class PyCalendarVTimezone(PyCalendarComponent):
     def getVEnd():
         return PyCalendarVTimezone.sEndDelimiter
 
-    def __init__(self, calendar=None, copyit=None):
-        if calendar is not None:
-            super(PyCalendarVTimezone, self).__init__(calendar=calendar)
-            self.mID = ""
-            self.mSortKey = 1
-        elif copyit is not None:
-            super(PyCalendarVTimezone, self).__init__(copyit=copyit)
-            self.mID = copyit.mID
-            self.mSortKey = copyit.mSortKey
+    def __init__(self, calendar):
+        super(PyCalendarVTimezone, self).__init__(calendar=calendar)
+        self.mID = ""
+        self.mSortKey = 1
 
-    def clone_it(self):
-        return PyCalendarVTimezone(copyit=self)
+    def duplicate(self, calendar):
+        other = super(PyCalendarVTimezone, self).duplicate(calendar)
+        other.mID = self.mID
+        other.mSortKey = self.mSortKey
+        return other
 
     def getType(self):
         return PyCalendarComponent.eVTIMEZONE
@@ -157,7 +155,7 @@ class PyCalendarVTimezone(PyCalendarComponent):
         # timezone component for proper comparison.
         # This means making the incoming date-time a floating (no timezone)
         # item
-        temp = PyCalendarDateTime(copyit=dt)
+        temp = dt.duplicate()
         temp.setTimezoneID(None)
 
         # Had to rework this because some VTIMEZONEs have sub-components where the DST instances are interleaved. That

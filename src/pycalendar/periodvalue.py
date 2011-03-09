@@ -19,13 +19,11 @@ from value import PyCalendarValue
 
 class PyCalendarPeriodValue( PyCalendarValue ):
 
-    def __init__( self, value = None, copyit = None ):
-        if value:
-            self.mValue = value
-        elif copyit:
-            self.mValue = PyCalendarPeriod( copyit=copyit.mValue )
-        else:
-            self.mValue = PyCalendarPeriod()
+    def __init__( self, value = None ):
+        self.mValue = value if value is not None else PyCalendarPeriod()
+
+    def duplicate(self):
+        return PyCalendarPeriodValue(self.mValue.duplicate())
 
     def getType( self ):
         return PyCalendarValue.VALUETYPE_PERIOD

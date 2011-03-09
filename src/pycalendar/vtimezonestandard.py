@@ -32,14 +32,11 @@ class PyCalendarVTimezoneStandard(PyCalendarVTimezoneElement):
     def getVEnd():
         return PyCalendarVTimezoneStandard.sEndDelimiter
 
-    def __init__(self, calendar=None, copyit=None):
-        if calendar is not None:
-            super(PyCalendarVTimezoneStandard, self).__init__(calendar=calendar)
-        elif copyit is not None:
-            super(PyCalendarVTimezoneStandard, self).__init__(copyit=copyit)
+    def __init__(self, calendar):
+        super(PyCalendarVTimezoneStandard, self).__init__(calendar=calendar)
 
-    def clone_it(self):
-        return PyCalendarVTimezoneStandard(copyit=self)
+    def duplicate(self, calendar):
+        return super(PyCalendarVTimezoneStandard, self).duplicate(calendar)
 
     def getType(self):
         return PyCalendarComponent.eVTIMEZONESTANDARD

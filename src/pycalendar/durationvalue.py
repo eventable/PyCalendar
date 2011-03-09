@@ -19,13 +19,11 @@ from value import PyCalendarValue
 
 class PyCalendarDurationValue(PyCalendarValue):
 
-    def __init__(self, value = None, copyit = None):
-        if value:
-            self.mValue = value
-        elif copyit:
-            self.mValue = PyCalendarDuration(duration=copyit.mValue)
-        else:
-            self.mValue = PyCalendarDuration()
+    def __init__(self, value = None):
+        self.mValue = value if value is not None else PyCalendarDuration()
+
+    def duplicate(self):
+        return PyCalendarDurationValue(self.mValue.duplicate())
 
     def getType(self):
         return PyCalendarValue.VALUETYPE_DURATION

@@ -20,9 +20,7 @@ import unittest
 
 class TestCalendar(unittest.TestCase):
     
-    def testRoundtrip(self):
-        
-        data = (
+    data = (
 """BEGIN:VCALENDAR
 CALSCALE:GREGORIAN
 PRODID:-//mulberrymail.com//Mulberry v4.0//EN
@@ -72,6 +70,8 @@ END:VCALENDAR
 """,
 )
 
+    def testRoundtrip(self):
+
         def _doRoundtrip(caldata):
             cal = PyCalendar()
             cal.parse(StringIO.StringIO(caldata))
@@ -81,5 +81,20 @@ END:VCALENDAR
             
             self.assertEqual(caldata, s.getvalue())
 
-        for item in data:
+        for item in self.data:
             _doRoundtrip(item)
+
+    def testRoundtripDuplicate(self):
+
+        def _doDuplicateRoundtrip(caldata):
+            cal = PyCalendar()
+            cal.parse(StringIO.StringIO(caldata))
+            cal = cal.duplicate()
+            
+            s = StringIO.StringIO()
+            cal.generate(s)
+            print s.getvalue()
+            self.assertEqual(caldata, s.getvalue())
+
+        for item in self.data:
+            _doDuplicateRoundtrip(item)

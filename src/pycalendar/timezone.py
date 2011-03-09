@@ -18,21 +18,24 @@ import stringutils
 
 class PyCalendarTimezone(object):
     
-    def __init__(self, utc=None, tzid=None, copyit=None):
+    def __init__(self, utc=None, tzid=None):
         
         if utc is not None:
             self.mUTC = utc
             self.mTimezone = tzid
-        elif copyit is not None:
-            self._copy_PyCalendarTimezone(copyit)
         else:
             self.mUTC = True
             self.mTimezone = None
     
-            # Copy defauilt timezone if it exists
+            # Copy default timezone if it exists
             from manager import PyCalendarManager
             if PyCalendarManager.sICalendarManager is not None:
-                self._copy_PyCalendarTimezone(PyCalendarManager.sICalendarManager.getDefaultTimezone())
+                defaulttz = PyCalendarManager.sICalendarManager.getDefaultTimezone()
+                self.mUTC = defaulttz.mUTC
+                self.mTimezone = defaulttz.mTimezone
+
+    def duplicate(self):
+        return PyCalendarTimezone(self.mUTC, self.mTimezone)
 
     def equals(self, comp):
         # Always match if any one of them is 'floating'
@@ -96,8 +99,4 @@ class PyCalendarTimezone(object):
 
         # Look up timezone and resolve date using default timezones
         return PyCalendar.sICalendar.getTimezoneDescriptor(self.mTimezone, dt)
-
-    def _copy_PyCalendarTimezone(self, copy):
-        self.mUTC = copy.mUTC
-        self.mTimezone = copy.mTimezone
     

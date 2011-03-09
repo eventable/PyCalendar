@@ -18,31 +18,19 @@
 ICalendar attribute.
 
 The attribute can consist of one or more values, all string.
-We optimise for the usual case of a single value by having a single string
-attribute in the class, and then an array for multi-values, which is None
-unless there is more than one value.
 """
 
 class PyCalendarAttribute(object):
 
-    def __init__( self, name = None, value = None, copyit = None ):
-        
-        if name and value:
-            self.mName = name
-            self.mValue = value
-            self.mValues = None
-        elif copyit:
-            self.mName = copyit.mName
-            self.mValue = copyit.mValue
-            if copyit.mValues is not None:
-                self.mValues = [i for i in copyit.mValues]
-            else:
-                self.mValues = None
-        else:
-            self.mName = ''
-            self.mValue = ''
-            self.mValues = None
+    def __init__( self, name, value = None ):
+        self.mName = name
+        self.mValues = [value] if value is not None else []
 
+    def duplicate(self):
+        other = PyCalendarAttribute(self.mName, [i for i in self.mValues])
+        other.mValues = [i for i in self.mValues]
+        return other
+        
     def getName( self ):
         return self.mName
 
@@ -50,10 +38,7 @@ class PyCalendarAttribute(object):
         self.mName = name
 
     def getFirstValue( self ):
-        if self.mValues is not None:
-            return self.mValues[0]
-        else:
-            return self.mValue
+        return self.mValues[0]
 
     def getValues( self ):
         return self.mValues
@@ -62,11 +47,6 @@ class PyCalendarAttribute(object):
         self.mValues = values
 
     def addValue( self, value ):
-        # See if switch from single to multi-value is needed
-        if self.mValues is None:
-            self.mValues = []
-            self.mValues.append( self.mValue )
-            self.mValue = None
         self.mValues.append( value )
 
     def generate( self, os ):
@@ -74,19 +54,15 @@ class PyCalendarAttribute(object):
             os.write( self.mName )
             os.write( "=" )
 
-            if self.mValues is None:
-                # Write with quotation if required
-                self.generateValue( os, self.mValue )
-            else:
-                first = True
-                for s in self.mValues:
-                    if first:
-                        first = False
-                    else:
-                        os.write( "," )
+            first = True
+            for s in self.mValues:
+                if first:
+                    first = False
+                else:
+                    os.write( "," )
 
-                    # Write with quotation if required
-                    self.generateValue( os, s )
+                # Write with quotation if required
+                self.generateValue( os, s )
 
         except:
             # We ignore errors

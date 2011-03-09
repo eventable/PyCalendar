@@ -78,12 +78,51 @@ class PyCalendarRecurrence(object):
                 
     cUnknownIndex = -1
 
-    def __init__(self, arg = None):
-        
-        if isinstance(arg, PyCalendarRecurrence):
-            self.copy_PyCalendarRecurrence(arg)
-        else:
-            self.init_PyCalendarRecurrence()
+    def __init__(self):
+        self.init_PyCalendarRecurrence()
+
+    def duplicate(self):
+        other = PyCalendarRecurrence()
+
+        other.mFreq = self.mFreq
+
+        other.mUseCount = self.mUseCount
+        other.mCount = self.mCount
+        other.mUseUntil = self.mUseUntil
+        if other.mUseUntil:
+            other.mUntil = self.mUntil.duplicate()
+
+        other.mInterval = self.mInterval
+        if self.mBySeconds != 0:
+            other.mBySeconds = self.mBySeconds[:]
+        if self.mByMinutes != 0:
+            other.mByMinutes = self.mByMinutes[:]
+        if self.mByHours != 0:
+            other.mByHours = self.mByHours[:]
+        if self.mByDay != 0:
+            other.mByDay = self.mByDay[:]
+        if self.mByMonthDay != 0:
+            other.mByMonthDay = self.mByMonthDay[:]
+        if self.mByYearDay != 0:
+            other.mByYearDay = self.mByYearDay[:]
+        if self.mByWeekNo != 0:
+            other.mByWeekNo = self.mByWeekNo[:]
+        if self.mByMonth != 0:
+            other.mByMonth = self.mByMonth[:]
+        if self.mBySetPos != 0:
+            other.mBySetPos = self.mBySetPos[:]
+        other.mWeekstart = self.mWeekstart
+
+        other.mCached = self.mCached
+        if self.mCacheStart:
+            other.mCacheStart = self.mCacheStart.duplicate()
+        if self.mCacheUpto:
+            other.mCacheUpto = self.mCacheUpto.duplicate()
+        other.mFullyCached = self.mFullyCached
+        if self.mRecurrences:
+            other.mRecurrences = self.mRecurrences[:]
+
+        return other
 
     def init_PyCalendarRecurrence(self):
         self.mFreq = definitions.eRecurrence_YEARLY
@@ -111,53 +150,6 @@ class PyCalendarRecurrence(object):
         self.mCacheUpto = None
         self.mFullyCached = False
         self.mRecurrences = None
-
-    def copy_PyCalendarRecurrence(self, copy):
-        self.init_PyCalendarRecurrence()
-
-        self.mFreq = copy.mFreq
-
-        self.mUseCount = copy.mUseCount
-        self.mCount = copy.mCount
-        self.mUseUntil = copy.mUseUntil
-        if self.mUseUntil:
-            self.mUntil = PyCalendarDateTime(copyit=copy.mUntil)
-
-        self.mInterval = copy.mInterval
-        if copy.mBySeconds != 0:
-            self.mBySeconds = copy.mBySeconds[:]
-        if copy.mByMinutes != 0:
-            self.mByMinutes = copy.mByMinutes[:]
-        if copy.mByHours != 0:
-            self.mByHours = copy.mByHours[:]
-        if copy.mByDay != 0:
-            self.mByDay = copy.mByDay[:]
-        if copy.mByMonthDay != 0:
-            self.mByMonthDay = copy.mByMonthDay[:]
-        if copy.mByYearDay != 0:
-            self.mByYearDay = copy.mByYearDay[:]
-        if copy.mByWeekNo != 0:
-            self.mByWeekNo = copy.mByWeekNo[:]
-        if copy.mByMonth != 0:
-            self.mByMonth = copy.mByMonth[:]
-        if copy.mBySetPos != 0:
-            self.mBySetPos = copy.mBySetPos[:]
-        self.mWeekstart = copy.mWeekstart
-
-        self.mCached = copy.mCached
-        if copy.mCacheStart:
-            self.mCacheStart = PyCalendarDateTime(copyit=copy.mCacheStart)
-        else:
-            self.mCacheStart = None
-        if copy.mCacheUpto:
-            self.mCacheUpto = PyCalendarDateTime(copyit=copy.mCacheUpto)
-        else:
-            self.mCacheUpto = None
-        self.mFullyCached = copy.mFullyCached
-        if copy.mRecurrences:
-            self.mRecurrences = copy.mRecurrences[:]
-        else:
-            self.mRecurrences = None
 
     def equals(self, comp):
         return (self.mFreq == comp.mFreq) and (self.mCount == comp.mCount) \
@@ -257,6 +249,12 @@ class PyCalendarRecurrence(object):
 
     def setByMonthDay(self, by):
         self.mByMonthDay = by[:]
+
+    def getByYearDay(self):
+        return self.mByYearDay
+
+    def setByYearDay(self, by):
+        self.mByYearDay = by[:]
 
     def getByDay(self):
         return self.mByDay
@@ -654,7 +652,7 @@ class PyCalendarRecurrence(object):
         # range end
         if not self.mCached or not self.mFullyCached \
                 and (self.mCacheUpto is None or self.mCacheUpto < range.getEnd()):
-            cache_range = PyCalendarPeriod(copyit=range)
+            cache_range = range.duplicate()
 
             # If partially cached just cache from previous cache end up to new
             # end
@@ -678,11 +676,11 @@ class PyCalendarRecurrence(object):
                 items.append(iter)
     
     def simpleExpand(self, start, range, items, float_offset):
-        start_iter = PyCalendarDateTime(copyit=start)
+        start_iter = start.duplicate()
         ctr = 0
 
         if self.mUseUntil:
-            float_until = PyCalendarDateTime(copyit=self.mUntil)
+            float_until = self.mUntil.duplicate()
             if start.floating():
                 float_until.setTimezoneID(0)
                 float_until.offsetSeconds(float_offset)
@@ -693,7 +691,7 @@ class PyCalendarRecurrence(object):
                 return False
 
             # Add current one to list
-            items.append(PyCalendarDateTime(copyit=start_iter))
+            items.append(start_iter.duplicate())
 
             # Get next item
             start_iter.recur(self.mFreq, self.mInterval)
@@ -711,17 +709,17 @@ class PyCalendarRecurrence(object):
                     return True
 
     def complexExpand(self, start, range, items, float_offset):
-        start_iter = PyCalendarDateTime(copyit=start)
+        start_iter = start.duplicate()
         ctr = 0
 
         if self.mUseUntil:
-            float_until = PyCalendarDateTime(copyit=self.mUntil)
+            float_until = self.mUntil.duplicate()
             if start.floating():
                 float_until.setTimezoneID(None)
                 float_until.offsetSeconds(float_offset)
 
         # Always add the initial instance DTSTART
-        items.append(PyCalendarDateTime(copyit=start))
+        items.append(start.duplicate())
         if self.mUseCount:
             # Bump counter and exit if over
             ctr += 1
@@ -842,7 +840,7 @@ class PyCalendarRecurrence(object):
         # All possible BYxxx are valid, though some combinations are not
 
         # Start with initial date-time
-        items.append(PyCalendarDateTime(copyit=start))
+        items.append(start.duplicate())
 
         if (self.mByMonth != 0) and (len(self.mByMonth) != 0):
             items[:] = self.byMonthExpand(items)
@@ -893,7 +891,7 @@ class PyCalendarRecurrence(object):
         # Cannot have BYYEARDAY and BYWEEKNO
 
         # Start with initial date-time
-        items.append(PyCalendarDateTime(copyit=start))
+        items.append(start.duplicate())
 
         if (self.mByMonth != 0) and (len(self.mByMonth) != 0):
             # BYMONTH limits the range of possible values
@@ -937,7 +935,7 @@ class PyCalendarRecurrence(object):
         # Cannot have BYYEARDAY and BYMONTHDAY
 
         # Start with initial date-time
-        items.append(PyCalendarDateTime(copyit=start))
+        items.append(start.duplicate())
 
         if (self.mByMonth != 0) and (len(self.mByMonth) != 0):
             # BYMONTH limits the range of possible values
@@ -973,7 +971,7 @@ class PyCalendarRecurrence(object):
         # Cannot have BYYEARDAY
 
         # Start with initial date-time
-        items.append(PyCalendarDateTime(copyit=start))
+        items.append(start.duplicate())
 
         if (self.mByMonth != 0) and (len(self.mByMonth) != 0):
             # BYMONTH limits the range of possible values
@@ -1021,7 +1019,7 @@ class PyCalendarRecurrence(object):
         # Cannot have BYYEARDAY
 
         # Start with initial date-time
-        items.append(PyCalendarDateTime(copyit=start))
+        items.append(start.duplicate())
 
         if (self.mByMonth != 0) and (len(self.mByMonth) != 0):
             # BYMONTH limits the range of possible values
@@ -1070,7 +1068,7 @@ class PyCalendarRecurrence(object):
         # Cannot have BYYEARDAY
 
         # Start with initial date-time
-        items.append(PyCalendarDateTime(copyit=start))
+        items.append(start.duplicate())
 
         if (self.mByMonth != 0) and (len(self.mByMonth) != 0):
             # BYMONTH limits the range of possible values
@@ -1115,7 +1113,7 @@ class PyCalendarRecurrence(object):
         # Cannot have BYYEARDAY
 
         # Start with initial date-time
-        items.append(PyCalendarDateTime(copyit=start))
+        items.append(start.duplicate())
 
         if (self.mByMonth != 0) and (len(self.mByMonth) != 0):
             # BYMONTH limits the range of possible values
@@ -1165,7 +1163,7 @@ class PyCalendarRecurrence(object):
             # Loop over each BYMONTH and generating a new date-time for it and
             # insert into output
             for iter2 in self.mByMonth:
-                temp = PyCalendarDateTime(copyit=iter1)
+                temp = iter1.duplicate()
                 temp.setMonth(iter2)
                 output.append(temp)
 
@@ -1178,7 +1176,7 @@ class PyCalendarRecurrence(object):
             # Loop over each BYWEEKNO and generating a new date-time for it and
             # insert into output
             for iter2 in self.mByWeekNo:
-                temp = PyCalendarDateTime(copyit=iter1)
+                temp = iter1.duplicate()
                 temp.setWeekNo(iter2)
                 output.append(temp)
                 
@@ -1191,7 +1189,7 @@ class PyCalendarRecurrence(object):
             # Loop over each BYYEARDAY and generating a new date-time for it
             # and insert into output
             for iter2 in self.mByYearDay:
-                temp = PyCalendarDateTime(copyit=iter1)
+                temp = iter1.duplicate()
                 temp.setYearDay(iter2)
                 output.append(temp)
 
@@ -1204,7 +1202,7 @@ class PyCalendarRecurrence(object):
             # Loop over each BYMONTHDAY and generating a new date-time for it
             # and insert into output
             for iter2 in self.mByMonthDay:
-                temp = PyCalendarDateTime(copyit=iter1)
+                temp = iter1.duplicate()
                 temp.setMonthDay(iter2)
                 output.append(temp)
 
@@ -1219,13 +1217,13 @@ class PyCalendarRecurrence(object):
             for iter2 in self.mByDay:
                 # Numeric value means specific instance
                 if iter2[0] != 0:
-                    temp = PyCalendarDateTime(copyit=iter1)
+                    temp = iter1.duplicate()
                     temp.setDayOfWeekInYear(iter2[0], iter2[1])
                     output.append(temp)
                 else:
                     # Every matching day in the year
                     for  i in range(1, 54):
-                        temp = PyCalendarDateTime(copyit=iter1)
+                        temp = iter1.duplicate()
                         temp.setDayOfWeekInYear(i, iter2[1])
                         if temp.getYear() == (iter1).getYear():
                             output.append(temp)
@@ -1241,13 +1239,13 @@ class PyCalendarRecurrence(object):
             for iter2 in self.mByDay:
                 # Numeric value means specific instance
                 if iter2[0] != 0:
-                    temp = PyCalendarDateTime(copyit=iter1)
+                    temp = iter1.duplicate()
                     temp.setDayOfWeekInMonth(iter2[0], iter2[1])
                     output.append(temp)
                 else:
                     # Every matching day in the month
                     for i in range(1, 7):
-                        temp = PyCalendarDateTime(copyit=iter1)
+                        temp = iter1.duplicate()
                         temp.setDayOfWeekInMonth(i, iter2[1])
                         if temp.getMonth() == iter1.getMonth():
                             output.append(temp)
@@ -1265,7 +1263,7 @@ class PyCalendarRecurrence(object):
             for iter2 in self.mByDay:
                 # Numeric values are meaningless so ignore them
                 if iter2[0] == 0:
-                    temp = PyCalendarDateTime(copyit=iter1)
+                    temp = iter1.duplicate()
 
                     # Determine amount of offset to apply to temp to shift it
                     # to the start of the week (backwards)
@@ -1292,7 +1290,7 @@ class PyCalendarRecurrence(object):
             # Loop over each BYHOUR and generating a new date-time for it and
             # insert into output
             for iter2 in self.mByHours:
-                temp = PyCalendarDateTime(copyit=iter1)
+                temp = iter1.duplicate()
                 temp.setHours(iter2)
                 output.append(temp)
 
@@ -1305,7 +1303,7 @@ class PyCalendarRecurrence(object):
             # Loop over each BYMINUTE and generating a new date-time for it and
             # insert into output
             for iter2 in self.mByMinutes:
-                temp = PyCalendarDateTime(copyit=iter1)
+                temp = iter1.duplicate()
                 temp.setMinutes(iter2)
                 output.append(temp)
 
@@ -1318,7 +1316,7 @@ class PyCalendarRecurrence(object):
             # Loop over each BYSECOND and generating a new date-time for it and
             # insert into output
             for iter2 in self.mBySeconds:
-                temp = PyCalendarDateTime(copyit=iter1)
+                temp = iter1.duplicate()
                 temp.setSeconds(iter2)
                 output.append(temp)
 

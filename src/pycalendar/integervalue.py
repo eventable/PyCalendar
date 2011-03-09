@@ -20,13 +20,11 @@ from value import PyCalendarValue
 
 class PyCalendarIntegerValue( PyCalendarValue ):
 
-    def __init__(self, value = None, copyit = None):
-        if value:
-            self.mValue = value
-        elif copyit:
-            self.mValue = copyit.mValue
-        else:
-            self.mValue = 0
+    def __init__(self, value = None):
+        self.mValue = value if value is not None else 0
+
+    def duplicate(self):
+        return PyCalendarIntegerValue(self.mValue)
 
     def getType(self):
         return PyCalendarValue.VALUETYPE_INTEGER

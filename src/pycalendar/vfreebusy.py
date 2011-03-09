@@ -38,29 +38,27 @@ class PyCalendarVFreeBusy(PyCalendarComponent):
     def gGetVEnd():
         return PyCalendarVFreeBusy.sEndDelimiter
 
-    def __init__(self, calendar=None, copyit=None):
-        if calendar is not None:
-            super(PyCalendarVFreeBusy, self).__init__(calendar=calendar)
-            self.mStart = PyCalendarDateTime()
-            self.mHasStart = False
-            self.mEnd = PyCalendarDateTime()
-            self.mHasEnd = False
-            self.mDuration = False
-            self.mCachedBusyTime = False
-            self.mSpanPeriod = None
-            self.mBusyTime = None
-        elif copyit is not None:
-            super(PyCalendarVFreeBusy, self).__init__(copyit=copyit)
-            self.mStart = PyCalendarDateTime(copyit.mStart)
-            self.mHasStart = copyit.mHasStart
-            self.mEnd = PyCalendarDateTime(copyit.mEnd)
-            self.mHasEnd = copyit.mHasEnd
-            self.mDuration = copyit.mDuration
-            self.mCachedBusyTime = False
-            self.mBusyTime = None
+    def __init__(self, calendar):
+        super(PyCalendarVFreeBusy, self).__init__(calendar=calendar)
+        self.mStart = PyCalendarDateTime()
+        self.mHasStart = False
+        self.mEnd = PyCalendarDateTime()
+        self.mHasEnd = False
+        self.mDuration = False
+        self.mCachedBusyTime = False
+        self.mSpanPeriod = None
+        self.mBusyTime = None
 
-    def clone_it(self):
-        return PyCalendarVFreeBusy(self)
+    def duplicate(self, calendar):
+        other = super(PyCalendarVFreeBusy, self).duplicate(calendar)
+        other.mStart = self.mStart.duplicate()
+        other.mHasStart = self.mHasStart
+        other.mEnd = self.mEnd.duplicate()
+        other.mHasEnd = self.mHasEnd
+        other.mDuration = self.mDuration
+        other.mCachedBusyTime = False
+        other.mBusyTime = None
+        return other
 
     def getType(self):
         return PyCalendarComponent.eVFREEBUSY
@@ -105,10 +103,10 @@ class PyCalendarVFreeBusy(PyCalendarComponent):
         # End is always greater than start if start exists
         if self.mHasStart and self.mEnd <= self.mStart:
             # Use the start
-            self.mEnd = PyCalendarDateTime(copyit=self.mStart)
+            self.mEnd = self.mStart.duplicate()
             self.mDuration = False
 
-            # Adjust to approriate non-inclusive end point
+            # Adjust to appropiate non-inclusive end point
             if self.mStart.isDateOnly():
                 self.mEnd.offsetDay(1)
 
@@ -171,7 +169,7 @@ class PyCalendarVFreeBusy(PyCalendarComponent):
         self.addProperty(prop)
 
         # If its an all day event and the end one day after the start, ignore it
-        temp = PyCalendarDateTime(copyit=start)
+        temp = start.duplicate()
         temp.offsetDay(1)
         if not start.isDateOnly() or end != temp:
             prop = PyCalendarProperty(definitions.cICalProperty_DTEND, end)

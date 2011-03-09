@@ -38,38 +38,41 @@ class PyCalendarComponent(PyCalendarComponentBase):
     eVTIMEZONESTANDARD = 6
     eVTIMEZONEDAYLIGHT = 7
 
-    def __init__(self, calendar=None, copyit=None):
+    def __init__(self, calendar):
         
-        if calendar:
-            super(PyCalendarComponent, self).__init__()
-            self.mCalendarRef = calendar
-            self.mUID = ""
-            self.mSeq = 0
-            self.mOriginalSeq = 0
-            self.mEmbedder = None
-            self.mEmbedded = None
-            self.mETag = None
-            self.mRURL = None
-            self.mChanged = False
-        elif copyit:
-            super(PyCalendarComponent, self).__init__(copyit=copyit)
-            self.mCalendarRef = copyit.mCalendarRef
-            self.mUID = copyit.mUID
-            self.mSeq = copyit.mSeq
-            self.mOriginalSeq = copyit.mOriginalSeq
-    
-            self.mEmbedder = None
-            self.mEmbedded = None
-            if copyit.mEmbedded != None:
-                # Do deep copy of element list
-                self.mEmbedded = []
-                for iter in copyit.mEmbedded:
-                    self.mEmbedded.append(iter.clone_it())
-                    self.mEmbedded[-1].setEmbedder(self)
+        super(PyCalendarComponent, self).__init__()
+        self.mCalendarRef = calendar
+        self.mUID = ""
+        self.mSeq = 0
+        self.mOriginalSeq = 0
+        self.mEmbedder = None
+        self.mEmbedded = None
+        self.mETag = None
+        self.mRURL = None
+        self.mChanged = False
 
-            self.mETag = copyit.mETag
-            self.mRURL = copyit.mRURL
-            self.mChanged = copyit.mChanged
+    def duplicate(self, calendar):
+        
+        other = super(PyCalendarComponent, self).duplicate(calendar)
+        other.mCalendarRef = self.mCalendarRef
+        other.mUID = self.mUID
+        other.mSeq = self.mSeq
+        other.mOriginalSeq = self.mOriginalSeq
+
+        other.mEmbedder = None
+        other.mEmbedded = None
+        if self.mEmbedded != None:
+            # Do deep copy of element list
+            other.mEmbedded = []
+            for iter in self.mEmbedded:
+                other.mEmbedded.append(iter.duplicate(calendar))
+                other.mEmbedded[-1].setEmbedder(other)
+
+        other.mETag = self.mETag
+        other.mRURL = self.mRURL
+        other.mChanged = self.mChanged
+        
+        return other
 
     def close(self):
 
@@ -80,9 +83,6 @@ class PyCalendarComponent(PyCalendarComponentBase):
             for iter in self.mEmbedded:
                 iter.close()
             self.mEmbedded = None
-
-    def clone_it(self):
-        raise NotImplemented
 
     def getType(self):
         raise NotImplemented

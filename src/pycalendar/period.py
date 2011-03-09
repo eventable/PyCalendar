@@ -21,7 +21,7 @@ from duration import PyCalendarDuration
 
 class PyCalendarPeriod(object):
 
-    def __init__( self, start = None, end = None, duration = None, copyit = None ):
+    def __init__( self, start = None, end = None, duration = None ):
         
         if (start is not None) and (end is not None):
             self.mStart = start
@@ -33,16 +33,16 @@ class PyCalendarPeriod(object):
             self.mDuration = duration
             self.mEnd = self.mStart + self.mDuration
             self.mUseDuration = True
-        elif (copyit is not None):
-            self.mStart = PyCalendarDateTime(copyit=copyit.mStart)
-            self.mEnd = PyCalendarDateTime(copyit=copyit.mEnd)
-            self.mDuration = PyCalendarDuration(copyit=copyit.mDuration)
-            self.mUseDuration = copyit.mUseDuration
         else:
             self.mStart = PyCalendarDateTime()
             self.mEnd = PyCalendarDateTime()
             self.mDuration = PyCalendarDuration()
             self.mUseDuration = False
+
+    def duplicate(self):
+        other = PyCalendarPeriod(start=self.mStart.duplicate(), end=self.mEnd.duplicate())
+        other.mUseDuration = self.mUseDuration
+        return other
 
     def __repr__(self):
         os = StringIO.StringIO()

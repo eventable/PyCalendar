@@ -53,41 +53,41 @@ class PyCalendarProperty(object):
     def loadStatics():
         PyCalendarProperty._init_map()
 
-    def __init__(self, arg1 = None, arg2 = None, arg3 = None):
+    def __init__(self, name = None, value = None, valuetype = None):
         self._init_PyCalendarProperty()
+        self.mName = name if name is not None else ""
 
-        arg1str = isinstance(arg1, str)
-        arg2str = isinstance(arg2, str)
-        if arg1str:
-            if isinstance(arg2, int) and (arg3 is None):
-                self.mName = arg1
-                self.init_attr_value_int(arg2)
-            elif arg2str and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_text(arg2, PyCalendarValue.VALUETYPE_TEXT)
-            elif arg2str and isinstance(arg3, int):
-                self.mName = arg1
-                self._init_attr_value_text(arg2, arg3)
-            elif isinstance(arg2, PyCalendarDateTime) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_datetime(arg2)
-            elif isinstance(arg2, list) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_datetimelist(arg2)
-            elif isinstance(arg2, PyCalendarDuration) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_duration(arg2)
-            elif isinstance(arg2, PyCalendarPeriod) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_period(arg2)
-            elif isinstance(arg2, PyCalendarRecurrence) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_recur(arg2)
-            elif isinstance(arg2, PyCalendarUTCOffsetValue) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_utcoffset(arg2)
-        elif isinstance(arg1, PyCalendarProperty) and (arg2 is None) and (arg3 is None):
-            self._copy_PyCalendarProperty(arg1)
+        if isinstance(value, int):
+            self.init_attr_value_int(value)
+
+        elif isinstance(value, str):
+            self._init_attr_value_text(value, valuetype if valuetype else PyCalendarValue.VALUETYPE_TEXT)
+
+        elif isinstance(value, PyCalendarDateTime):
+            self._init_attr_value_datetime(value)
+
+        elif isinstance(value, list):
+            self._init_attr_value_datetimelist(value)
+
+        elif isinstance(value, PyCalendarDuration):
+            self._init_attr_value_duration(value)
+
+        elif isinstance(value, PyCalendarPeriod):
+            self._init_attr_value_period(value)
+
+        elif isinstance(value, PyCalendarRecurrence):
+            self._init_attr_value_recur(value)
+
+        elif isinstance(value, PyCalendarUTCOffsetValue):
+            self._init_attr_value_utcoffset(value)
+
+    def duplicate(self):
+        other = PyCalendarProperty(self.mName)
+        for attrname, attrs in self.mAttributes.items():
+            other.mAttributes[attrname] = [i.duplicate() for i in attrs]
+        other.mValue = self.mValue.duplicate()
+
+        return other
 
     def __repr__(self):
         os = StringIO.StringIO()
@@ -314,13 +314,6 @@ class PyCalendarProperty(object):
         self.mName = ""
         self.mAttributes = {}
         self.mValue = None
-
-    def _copy_PyCalendarProperty(self, copyit):
-        self.mName = copyit.mName
-        self.mAttributes = {}
-        for attr in copyit.mAttributes.values():
-            self.mAttributes.setdefault(attr.getName(), []).append(PyCalendarAttribute(copyit=attr))
-        self.mValue = copyit.mValue.copy()
 
     @staticmethod
     def _init_map():

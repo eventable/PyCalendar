@@ -92,10 +92,6 @@ class PyCalendar(PyCalendarComponentBase):
     
         self.addDefaultProperties()
     
-        # Special init for static item
-        if self is PyCalendar.sICalendar:
-            self.initDefaultTimezones()
-
         self.mV = []
         for _ignore_i in range(PyCalendar.MAXV):
             self.mV.append(PyCalendarComponentDB())
@@ -104,6 +100,16 @@ class PyCalendar(PyCalendarComponentBase):
         if self is PyCalendar.sICalendar:
             self.initDefaultTimezones()
     
+    def duplicate(self):
+        other = super(PyCalendar, self).duplicate()
+        other.mReadOnly = self.mReadOnly
+        other.mDirty = self.mDirty
+        other.mTotalReplace = self.mTotalReplace
+        other.mName = self.mName
+        other.mDescription = self.mDescription
+        other.mV = [i.duplicate(self) for i in self.mV]
+        return other
+
     def close(self):
         # Clean up the map items
         for v in self.mV:
@@ -709,7 +715,7 @@ class PyCalendar(PyCalendarComponentBase):
             if not self.mV[PyCalendar.VTIMEZONE].has_key(tz.getMapKey()):
 
                 # Item does not already exist - so copy and add it
-                copy = PyCalendarVTimezone(copyit=tz)
+                copy = tz.duplicate(cal)
                 self.mV[PyCalendar.VTIMEZONE].addComponent(copy)
 
             else:
@@ -814,7 +820,7 @@ class PyCalendar(PyCalendarComponentBase):
             master = vevent.getTrueMaster()
 
             # NB the vevent will be deleted as part of this so cache the instance start before
-            exclude = PyCalendarDateTime(copyit=vevent.getInstanceStart())
+            exclude = vevent.getInstanceStart().duplicate()
 
             # The start instance is the RECURRENCE-ID to exclude
             master.excludeRecurrence(exclude)
@@ -827,7 +833,7 @@ class PyCalendar(PyCalendarComponentBase):
             master = vevent.getTrueMaster()
 
             # NB the vevent will be deleted as part of this so cache the instance start before
-            exclude = PyCalendarDateTime(copyit=vevent.getInstanceStart())
+            exclude = vevent.getInstanceStart().duplicate()
 
             # The DTSTART specifies the recurrence that we exclude
             master.excludeFutureRecurrence(exclude)
@@ -998,7 +1004,7 @@ class PyCalendar(PyCalendarComponentBase):
                 tz = PyCalendar.sICalendar.getTimezone(tzid)
                 if tz is not None:
 
-                    dup = PyCalendarVTimezone(copyit=tz)
+                    dup = tz.duplicate()
                     self.mV[PyCalendar.VTIMEZONE].addComponent(dup)
         
     def includeTimezonesDB(self, components, tzids):
