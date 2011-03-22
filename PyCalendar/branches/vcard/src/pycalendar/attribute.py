@@ -32,12 +32,12 @@ class PyCalendarAttribute(object):
         return other
 
     def __hash__(self):
-        return hash((self.mName, tuple(self.mValues)))
+        return hash((self.mName.upper(), tuple(self.mValues)))
 
     def __ne__(self, other): return not self.__eq__(other)
     def __eq__(self, other):
         if not isinstance(other, PyCalendarAttribute): return False
-        return self.mName == other.mName and self.mValues == other.mValues
+        return self.mName.upper() == other.mName.upper() and self.mValues == other.mValues
 
     def getName( self ):
         return self.mName
@@ -64,17 +64,20 @@ class PyCalendarAttribute(object):
     def generate( self, os ):
         try:
             os.write( self.mName )
-            os.write( "=" )
-
-            first = True
-            for s in self.mValues:
-                if first:
-                    first = False
-                else:
-                    os.write( "," )
-
-                # Write with quotation if required
-                self.generateValue( os, s )
+            
+            # To support vCard 2.1 syntax we allow parameters without values
+            if self.mValues:
+                os.write( "=" )
+    
+                first = True
+                for s in self.mValues:
+                    if first:
+                        first = False
+                    else:
+                        os.write( "," )
+    
+                    # Write with quotation if required
+                    self.generateValue( os, s )
 
         except:
             # We ignore errors
