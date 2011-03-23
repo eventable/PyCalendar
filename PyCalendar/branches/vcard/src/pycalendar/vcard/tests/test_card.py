@@ -16,7 +16,7 @@
 
 from pycalendar.vcard.card import Card
 from pycalendar.vcard.property import Property
-import StringIO
+import cStringIO as StringIO
 import difflib
 import unittest
 

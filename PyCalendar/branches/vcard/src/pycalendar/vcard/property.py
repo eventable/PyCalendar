@@ -157,7 +157,7 @@ class Property(object):
         elif isinstance(value, N):
             self._init_attr_value_n(value)
 
-        elif isinstance(value, list):
+        elif isinstance(value, list) or isinstance(value, tuple):
             if name.upper() == Property_ORG:
                 self._init_attr_value_org(value)
             elif name.upper() == Property_GEO:

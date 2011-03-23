@@ -16,6 +16,8 @@
 
 # vCard ADR value
 
+import cStringIO as StringIO
+
 from pycalendar import utils
 
 class N(object):
@@ -32,8 +34,8 @@ class N(object):
         MAXITEMS
     ) = range(6)
 
-    def __init__(self, value = None):
-        self.mValue = value if value else tuple(["" for _ignore in range(N.MAXITEMS)])
+    def __init__(self, first="", last="", middle="", prefix="", suffix=""):
+        self.mValue = (first, last, middle, prefix, suffix)
 
     def duplicate(self):
         return N(self.mValue)
@@ -50,10 +52,57 @@ class N(object):
     def __eq__( self, comp ):
         return self.mValue == comp.mValue
 
+    def getFirst(self):
+        return self.mValue[N.FIRST]
+    
+    def setFirst(self, value):
+        self.mValue[N.FIRST] = value
+
+    def getLast(self):
+        return self.mValue[N.LAST]
+    
+    def setLast(self, value):
+        self.mValue[N.LAST] = value
+
+    def getMiddle(self):
+        return self.mValue[N.MIDDLE]
+    
+    def setMiddle(self, value):
+        self.mValue[N.MIDDLE] = value
+
+    def getPrefix(self):
+        return self.mValue[N.PREFIX]
+    
+    def setPrefix(self, value):
+        self.mValue[N.PREFIX] = value
+
+    def getSuffix(self):
+        return self.mValue[N.SUFFIX]
+    
+    def setSuffix(self, value):
+        self.mValue[N.SUFFIX] = value
+
+    def getFullName(self):
+        
+        def _stringOrList(item):
+            return item if isinstance(item, basestring) else " ".join(item)
+
+        results = []
+        for i in (N.PREFIX, N.FIRST, N.MIDDLE, N.LAST, N.SUFFIX):
+            result = _stringOrList(self.mValue[i])
+            if result:
+                results.append(result)
+
+        return " ".join(results)
+
     def parse(self, data):
         self.mValue = utils.parseDoubleNestedList(data, N.MAXITEMS)
 
-    # os - StringIO object
+    def getText(self):
+        os = StringIO.StringIO()
+        self.generate(os)
+        return os.getvalue()
+
     def generate(self, os):
         utils.generateDoubleNestedList(os, self.mValue)
 

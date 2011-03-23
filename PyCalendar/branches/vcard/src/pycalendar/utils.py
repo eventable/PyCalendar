@@ -247,14 +247,14 @@ def parseDoubleNestedList(data, maxsize):
 def generateDoubleNestedList(os, data):
     try:
         def _writeElement(item):
-            if isinstance(item, tuple):
+            if isinstance(item, basestring):
+                writeTextValue(os, item)
+            else:
                 if item:
                     writeTextValue(os, item[0])
                     for bit in item[1:]:
                         os.write(",")
                         writeTextValue(os, bit)
-            else:
-                writeTextValue(os, item)
             
         for item in data[:-1]:
             _writeElement(item)
