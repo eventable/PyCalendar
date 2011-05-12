@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,31 +14,24 @@
 #    limitations under the License.
 ##
 
-from attribute import PyCalendarAttribute
-from component import PyCalendarComponent
-from datetime import PyCalendarDateTime
-from duration import PyCalendarDuration
-from property import PyCalendarProperty
-from value import PyCalendarValue
-import definitions
+from pycalendar import definitions
+from pycalendar.attribute import PyCalendarAttribute
+from pycalendar.component import PyCalendarComponent
+from pycalendar.datetime import PyCalendarDateTime
+from pycalendar.duration import PyCalendarDuration
+from pycalendar.property import PyCalendarProperty
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarVAlarm(PyCalendarComponent):
-
-    sBeginDelimiter = definitions.cICalComponent_BEGINVALARM
-
-    sEndDelimiter = definitions.cICalComponent_ENDVALARM
 
     # Classes for each action encapsulating action-specific data
     class PyCalendarVAlarmAction(object):
 
-        def __init__(self, type=None, copyit=None):
-            if type is not None:
-                self.mType = type
-            elif copyit is not None:
-                self.mType = copyit.mType
+        def __init__(self, type):
+            self.mType = type
 
-        def clone_it(self):
-            pass
+        def duplicate(self):
+            return PyCalendarVAlarm.PyCalendarVAlarmAction(self.mType)
 
         def load(self, valarm):
             pass
@@ -54,18 +47,12 @@ class PyCalendarVAlarm(PyCalendarComponent):
 
     class PyCalendarVAlarmAudio(PyCalendarVAlarmAction):
 
-        def __init__(self, speak=None, copyit=None):
-            if speak is not None:
-                super(PyCalendarVAlarm.PyCalendarVAlarmAudio, self).__init__(type=definitions.eAction_VAlarm_Audio)
-                self.mSpeakText = speak
-            elif copyit is not None:
-                super(PyCalendarVAlarm.PyCalendarVAlarmAudio, self).__init__(copyit=copyit)
-                self.mSpeakText = copyit.mSpeakText
-            else:
-                super(PyCalendarVAlarm.PyCalendarVAlarmAudio, self).__init__(type=definitions.eAction_VAlarm_Audio)
+        def __init__(self, speak=None):
+            super(PyCalendarVAlarm.PyCalendarVAlarmAudio, self).__init__(type=definitions.eAction_VAlarm_Audio)
+            self.mSpeakText = speak
 
-        def clone_it(self):
-            return PyCalendarVAlarm.PyCalendarVAlarmAudio(self)
+        def duplicate(self):
+            return PyCalendarVAlarm.PyCalendarVAlarmAudio(self.mSpeakText)
 
         def load(self, valarm):
             # Get properties
@@ -89,18 +76,12 @@ class PyCalendarVAlarm(PyCalendarComponent):
 
     class PyCalendarVAlarmDisplay(PyCalendarVAlarmAction):
 
-        def __init__(self, description=None, copyit=None):
-            if description is not None:
-                super(PyCalendarVAlarm.PyCalendarVAlarmDisplay, self).__init__(type=definitions.eAction_VAlarm_Display)
-                self.mDescription = description
-            elif copyit is not None:
-                super(PyCalendarVAlarm.PyCalendarVAlarmDisplay, self).__init__(copyit=copyit)
-                self.mDescription = copyit.mDescription
-            else:
-                super(PyCalendarVAlarm.PyCalendarVAlarmDisplay, self).__init__(type=definitions.eAction_VAlarm_Display)
+        def __init__(self, description=None):
+            super(PyCalendarVAlarm.PyCalendarVAlarmDisplay, self).__init__(type=definitions.eAction_VAlarm_Display)
+            self.mDescription = description
 
-        def clone_it(self):
-            return PyCalendarVAlarm.PyCalendarVAlarmDisplay(self)
+        def duplicate(self):
+            return PyCalendarVAlarm.PyCalendarVAlarmDisplay(self.mDescription)
 
         def load(self, valarm):
             # Get properties
@@ -121,22 +102,14 @@ class PyCalendarVAlarm(PyCalendarComponent):
 
     class PyCalendarVAlarmEmail(PyCalendarVAlarmAction):
 
-        def __init__(self, description=None, summary=None, attendees=None, copyit=None):
-            if description is not None:
-                super(PyCalendarVAlarm.PyCalendarVAlarmEmail, self).__init__(type=definitions.eAction_VAlarm_Display)
-                self.mDescription = description
-                self.mSummary = summary
-                self.mAttendees = attendees
-            elif copyit is not None:
-                super(PyCalendarVAlarm.PyCalendarVAlarmEmail, self).__init__(copyit=copyit)
-                self.mDescription = self.mDescription
-                self.mSummary = self.mSummary
-                self.mAttendees = copyit.mAttendees[:]
-            else:
-                super(PyCalendarVAlarm.PyCalendarVAlarmEmail, self).__init__(type=definitions.eAction_VAlarm_Display)
+        def __init__(self, description=None, summary=None, attendees=None):
+            super(PyCalendarVAlarm.PyCalendarVAlarmEmail, self).__init__(type=definitions.eAction_VAlarm_Display)
+            self.mDescription = description
+            self.mSummary = summary
+            self.mAttendees = attendees
 
-        def clone_it(self):
-            return PyCalendarVAlarm.PyCalendarVAlarmEmail(self)
+        def duplicate(self):
+            return PyCalendarVAlarm.PyCalendarVAlarmEmail(self.mDescription, self.mSummary, self.mAttendees)
 
         def load(self, valarm):
             # Get properties
@@ -150,7 +123,7 @@ class PyCalendarVAlarm(PyCalendarComponent):
                 for iter in range:
                     # Get the attendee value
                     attendee = iter.getCalAddressValue()
-                    if attendee != None:
+                    if attendee is not None:
                         self.mAttendees.append(attendee.getValue())
 
         def add(self, valarm):
@@ -183,14 +156,11 @@ class PyCalendarVAlarm(PyCalendarComponent):
 
     class PyCalendarVAlarmUnknown(PyCalendarVAlarmAction):
 
-        def __init__(self, copyit=None):
-            if copyit is not None:
-                super(PyCalendarVAlarm.PyCalendarVAlarmUnknown, self).__init__(copyit=copyit)
-            else:
-                super(PyCalendarVAlarm.PyCalendarVAlarmUnknown, self).__init__(type=definitions.eAction_VAlarm_Unknown)
+        def __init__(self):
+            super(PyCalendarVAlarm.PyCalendarVAlarmUnknown, self).__init__(type=definitions.eAction_VAlarm_Unknown)
 
-        def clone_it(self):
-            return PyCalendarVAlarm.PyCalendarVAlarmUnknown(self)
+        def duplicate(self):
+            return PyCalendarVAlarm.PyCalendarVAlarmUnknown()
 
         def load(self, valarm):
             pass
@@ -201,79 +171,61 @@ class PyCalendarVAlarm(PyCalendarComponent):
         def remove(self, valarm):
             pass
 
-    @staticmethod
-    def getVBegin():
-        return PyCalendarVAlarm.sBeginDelimiter
-
-    @staticmethod
-    def getVEnd():
-        return PyCalendarVAlarm.sEndDelimiter
-
     def getMimeComponentName(self):
         # Cannot be sent as a separate MIME object
         return None
 
-    def __init__(self, calendar=None, copyit=None):
+    def __init__(self, parent=None):
         
-        if calendar is not None:
-            super(PyCalendarVAlarm, self).__init__(calendar=calendar)
-    
-            self.mAction = definitions.eAction_VAlarm_Display
-            self.mTriggerAbsolute = False
-            self.mTriggerOnStart = True
-            self.mTriggerOn = PyCalendarDateTime()
-    
-            # Set duration default to 1 hour
-            self.mTriggerBy = PyCalendarDuration()
-            self.mTriggerBy.setDuration(60 * 60)
-    
-            # Does not repeat by default
-            self.mRepeats = 0
-            self.mRepeatInterval = PyCalendarDuration()
-            self.mRepeatInterval.setDuration(5 * 60) # Five minutes
-    
-            # Status
-            self.mStatusInit = False
-            self.mAlarmStatus = definitions.eAlarm_Status_Pending
-            self.mLastTrigger = PyCalendarDateTime()
-            self.mNextTrigger = PyCalendarDateTime()
-            self.mDoneCount = 0
-    
-            # Create action data
-            self.mActionData = PyCalendarVAlarm.PyCalendarVAlarmDisplay("")
+        super(PyCalendarVAlarm, self).__init__(parent=parent)
 
-        elif copyit is not None:
-            super(PyCalendarVAlarm, self).__init__(copyit=copyit)
-    
-            self.mAction = copyit.mAction
-            self.mTriggerAbsolute = copyit.mTriggerAbsolute
-            self.mTriggerOn = PyCalendarDateTime(copyit.mTriggerOn)
-            self.mTriggerBy = PyCalendarDuration(copyit.mTriggerBy)
-            self.mTriggerOnStart = copyit.mTriggerOnStart
-    
-            self.mRepeats = copyit.mRepeats
-            self.mRepeatInterval = PyCalendarDuration(copyit.mRepeatInterval)
-    
-            self.mAlarmStatus = copyit.mAlarmStatus
-            if copyit.mLastTrigger is not None:
-                self.mLastTrigger = PyCalendarDateTime(copyit.mLastTrigger)
-            if copyit.mNextTrigger is not None:
-                self.mNextTrigger = PyCalendarDateTime(copyit.mNextTrigger)
-            self.mDoneCount = copyit.mDoneCount
-    
-            self.mActionData = copyit.mActionData.clone_it()
+        self.mAction = definitions.eAction_VAlarm_Display
+        self.mTriggerAbsolute = False
+        self.mTriggerOnStart = True
+        self.mTriggerOn = PyCalendarDateTime()
 
-    def clone_it(self):
-        return PyCalendarVAlarm(self)
+        # Set duration default to 1 hour
+        self.mTriggerBy = PyCalendarDuration()
+        self.mTriggerBy.setDuration(60 * 60)
+
+        # Does not repeat by default
+        self.mRepeats = 0
+        self.mRepeatInterval = PyCalendarDuration()
+        self.mRepeatInterval.setDuration(5 * 60) # Five minutes
+
+        # Status
+        self.mStatusInit = False
+        self.mAlarmStatus = definitions.eAlarm_Status_Pending
+        self.mLastTrigger = PyCalendarDateTime()
+        self.mNextTrigger = PyCalendarDateTime()
+        self.mDoneCount = 0
+
+        # Create action data
+        self.mActionData = PyCalendarVAlarm.PyCalendarVAlarmDisplay("")
+
+    def duplicate(self, parent=None):
+        other = super(PyCalendarVAlarm, self).duplicate(parent=parent)
+        other.mAction = self.mAction
+        other.mTriggerAbsolute = self.mTriggerAbsolute
+        other.mTriggerOn = self.mTriggerOn.duplicate()
+        other.mTriggerBy = self.mTriggerBy.duplicate()
+        other.mTriggerOnStart = self.mTriggerOnStart
+
+        other.mRepeats = self.mRepeats
+        other.mRepeatInterval = self.mRepeatInterval.duplicate()
+
+        other.mAlarmStatus = self.mAlarmStatus
+        if self.mLastTrigger is not None:
+            other.mLastTrigger = self.mLastTrigger.duplicate()
+        if self.mNextTrigger is not None:
+            other.mNextTrigger = self.mNextTrigger.duplicate()
+        other.mDoneCount = self.mDoneCount
+
+        other.mActionData = self.mActionData.duplicate()
+        return other
 
     def getType(self):
-        return PyCalendarComponent.eVALARM
-
-    def getBeginDelimiter(self):
-        return PyCalendarVAlarm.sBeginDelimiter
-
-    def getEndDelimiter(self):
-        return PyCalendarVAlarm.sEndDelimiter
+        return definitions.cICalComponent_VALARM
 
     def getAction(self):
         return self.mAction

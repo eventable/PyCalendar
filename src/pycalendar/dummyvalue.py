@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -16,17 +16,18 @@
 
 # iCalendar UTC Offset value
 
-from value import PyCalendarValue
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarDummyValue( PyCalendarValue ):
 
-    def __init__( self, type=None, copyit=None ):
-        if type is not None:
-            self.mType = type
-            self.mValue = ''
-        else:
-            self.mType = copyit.mType
-            self.mValue = copyit.mValue
+    def __init__( self, type ):
+        self.mType = type
+        self.mValue = ''
+
+    def duplicate(self):
+        other = PyCalendarDummyValue(self.mType)
+        other.mValue = self.mValue
+        return other
 
     def getType( self ):
         return self.mType

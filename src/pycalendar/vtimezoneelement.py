@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,43 +14,36 @@
 #    limitations under the License.
 ##
 
-from datetime import PyCalendarDateTime
-from period import PyCalendarPeriod
-from recurrenceset import PyCalendarRecurrenceSet
-from value import PyCalendarValue
-from vtimezone import PyCalendarVTimezone
-import definitions
+from bisect import bisect_right
+from pycalendar import definitions
+from pycalendar.datetime import PyCalendarDateTime
+from pycalendar.period import PyCalendarPeriod
+from pycalendar.recurrenceset import PyCalendarRecurrenceSet
+from pycalendar.value import PyCalendarValue
+from pycalendar.vtimezone import PyCalendarVTimezone
 
 class PyCalendarVTimezoneElement(PyCalendarVTimezone):
 
-    def __init__(self, calendar=None, dt=None, offset=None, copyit=None):
-        if calendar is not None and dt is None:
-            super(PyCalendarVTimezoneElement, self).__init__(calendar=calendar)
-            self.mStart = PyCalendarDateTime()
-            self.mTZName = ""
-            self.mUTCOffset = 0
-            self.mUTCOffsetFrom = 0
-            self.mRecurrences = PyCalendarRecurrenceSet()
-            self.mCachedExpandBelow = None
-            self.mCachedExpandBelowItems = None
-        elif calendar is not None and dt is not None:
-            super(PyCalendarVTimezoneElement, self).__init__(calendar=calendar)
-            self.mStart = dt
-            self.mTZName = ""
-            self.mUTCOffset = offset
-            self.mUTCOffsetFrom = 0
-            self.mRecurrences = PyCalendarRecurrenceSet()
-            self.mCachedExpandBelow = None
-            self.mCachedExpandBelowItems = None
-        elif copyit:
-            super(PyCalendarVTimezoneElement, self).__init__(copyit=copyit)
-            self.mStart = PyCalendarDateTime(copyit=copyit.mStart)
-            self.mTZName = copyit.mTZName
-            self.mUTCOffset = copyit.mUTCOffset
-            self.mUTCOffsetFrom = copyit.mUTCOffsetFrom
-            self.mRecurrences = copyit.mRecurrences
-            self.mCachedExpandBelow = None
-            self.mCachedExpandBelowItems = None
+    def __init__(self, parent=None, dt=None, offset=None):
+        super(PyCalendarVTimezoneElement, self).__init__(parent=parent)
+        self.mStart = dt if dt is not None else PyCalendarDateTime()
+        self.mTZName = ""
+        self.mUTCOffset = offset if offset is not None else 0
+        self.mUTCOffsetFrom = 0
+        self.mRecurrences = PyCalendarRecurrenceSet()
+        self.mCachedExpandBelow = None
+        self.mCachedExpandBelowItems = None
+
+    def duplicate(self, parent=None):
+        other = super(PyCalendarVTimezoneElement, self).duplicate(parent=parent)
+        other.mStart = self.mStart.duplicate()
+        other.mTZName = self.mTZName
+        other.mUTCOffset = self.mUTCOffset
+        other.mUTCOffsetFrom = self.mUTCOffsetFrom
+        other.mRecurrences = self.mRecurrences.duplicate()
+        other.mCachedExpandBelow = None
+        other.mCachedExpandBelowItems = None
+        return other
 
     def finalise(self):
         # Get DTSTART
@@ -82,6 +75,12 @@ class PyCalendarVTimezoneElement(PyCalendarVTimezone):
         # Do inherited
         super(PyCalendarVTimezoneElement, self).finalise()
 
+    def getSortKey(self):
+        """
+        We do not want these components sorted.
+        """
+        return ""
+
     def getStart(self):
         return self.mStart
 
@@ -111,17 +110,13 @@ class PyCalendarVTimezoneElement(PyCalendarVTimezone):
             # that the recurrence
             # cache is invalidated less frequently
 
-            temp = PyCalendarDateTime(copyit=below)
-            temp.setMonth(1)
-            temp.setDay(1)
-            temp.setHHMMSS(0, 0, 0)
-            temp.offsetYear(1)
+            temp = PyCalendarDateTime(below.getYear(), 1, 1, 0, 0, 0)
 
             # Use cache of expansion
             if self.mCachedExpandBelowItems is None:
                 self.mCachedExpandBelowItems = []
             if self.mCachedExpandBelow is None:
-                self.mCachedExpandBelow = PyCalendarDateTime(copyit=self.mStart)
+                self.mCachedExpandBelow = self.mStart.duplicate()
             if temp > self.mCachedExpandBelow:
                 self.mCachedExpandBelowItems = []
                 period = PyCalendarPeriod(self.mStart, temp)
@@ -131,18 +126,19 @@ class PyCalendarVTimezoneElement(PyCalendarVTimezone):
             if len(self.mCachedExpandBelowItems) != 0:
                 # List comes back sorted so we pick the element just less than
                 # the dt value we want
-                for i in range(len(self.mCachedExpandBelowItems)):
-                    if self.mCachedExpandBelowItems[i] > below:
-                        if i != 0:
-                            return self.mCachedExpandBelowItems[i - 1]
-                        break
+                i = bisect_right(self.mCachedExpandBelowItems, below)
+                if i != 0:
+                    return self.mCachedExpandBelowItems[i - 1]
                 
-                # The last one in the list is the one we want
-                return self.mCachedExpandBelowItems[len(self.mCachedExpandBelowItems) - 1]
+                # The first one in the list is the one we want
+                return self.mCachedExpandBelowItems[0]
 
             return self.mStart
 
     def expandAll(self, start, end):
+
+        if start is None:
+            start = self.mStart
 
         # Ignore if there is no change in offset
         offsetto = self.loadValueInteger(definitions.cICalProperty_TZOFFSETTO, PyCalendarValue.VALUETYPE_UTC_OFFSET)
@@ -171,25 +167,21 @@ class PyCalendarVTimezoneElement(PyCalendarVTimezone):
             # that the recurrence
             # cache is invalidated less frequently
 
-            temp = PyCalendarDateTime(copyit=end)
-            temp.setMonth(1)
-            temp.setDay(1)
-            temp.setHHMMSS(0, 0, 0)
-            temp.offsetYear(1)
+            temp = PyCalendarDateTime(end.getYear(), 1, 1, 0, 0, 0)
 
             # Use cache of expansion
             if self.mCachedExpandBelowItems is None:
                 self.mCachedExpandBelowItems = []
             if self.mCachedExpandBelow is None:
-                self.mCachedExpandBelow = PyCalendarDateTime(copyit=self.mStart)
+                self.mCachedExpandBelow = self.mStart.duplicate()
             if temp > self.mCachedExpandBelow:
                 self.mCachedExpandBelowItems = []
-                period = PyCalendarPeriod(start, end)
+                period = PyCalendarPeriod(self.mStart, end)
                 self.mRecurrences.expand(self.mStart, period, self.mCachedExpandBelowItems, float_offset=self.mUTCOffsetFrom)
                 self.mCachedExpandBelow = temp
             
             if len(self.mCachedExpandBelowItems) != 0:
-                # The last one in the list is the one we want
-                return [(dt, offsetfrom, offsetto,) for dt in self.mCachedExpandBelowItems]
+                # Return them all within the range
+                return [(dt, offsetfrom, offsetto,) for dt in self.mCachedExpandBelowItems if dt >= start and dt < end]
 
             return ()

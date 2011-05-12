@@ -14,8 +14,6 @@
 #    limitations under the License.
 ##
 
-from period import PyCalendarPeriod
-
 class PyCalendarFreeBusy(object):
 
     FREE = 0
@@ -23,18 +21,13 @@ class PyCalendarFreeBusy(object):
     BUSYUNAVAILABLE = 2
     BUSY = 3
 
-    def __init__( self, type = None, period = None, copyit = None ):
+    def __init__( self, type = None, period = None ):
         
-        if type and period:
-            self.mType = type
-            self.mPeriod = PyCalendarPeriod( copyit=period )
-        elif type:
-            self.mType = type
-        elif copyit:
-            self.mType = copyit.mType
-            self.mPeriod = PyCalendarPeriod( copyit=copyit.mPeriod )
-        else:
-            self.mType = PyCalendarFreeBusy.FREE
+        self.mType = type if type else PyCalendarFreeBusy.FREE
+        self.mPeriod = period.duplicate() if period is not None else None
+
+    def duplicate(self):
+        return PyCalendarFreeBusy(self.mType, self.mPeriod)
 
     def setType( self, type ):
         self.mType = type
@@ -43,7 +36,7 @@ class PyCalendarFreeBusy(object):
         return self.mType
 
     def setPeriod( self, period ):
-        self.mPeriod = PyCalendarPeriod( copyit=period )
+        self.mPeriod = period.duplicate()
 
     def getPeriod( self ):
         return self.mPeriod

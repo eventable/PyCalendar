@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,90 +14,213 @@
 #    limitations under the License.
 ##
 
+from pycalendar import definitions
+from pycalendar import stringutils
+from pycalendar.attribute import PyCalendarAttribute
+from pycalendar.binaryvalue import PyCalendarBinaryValue
+from pycalendar.caladdressvalue import PyCalendarCalAddressValue
+from pycalendar.datetime import PyCalendarDateTime
+from pycalendar.datetimevalue import PyCalendarDateTimeValue
+from pycalendar.dummyvalue import PyCalendarDummyValue
+from pycalendar.duration import PyCalendarDuration
+from pycalendar.durationvalue import PyCalendarDurationValue
+from pycalendar.exceptions import PyCalendarInvalidProperty
+from pycalendar.integervalue import PyCalendarIntegerValue
+from pycalendar.multivalue import PyCalendarMultiValue
+from pycalendar.period import PyCalendarPeriod
+from pycalendar.periodvalue import PyCalendarPeriodValue
+from pycalendar.plaintextvalue import PyCalendarPlainTextValue
+from pycalendar.recurrence import PyCalendarRecurrence
+from pycalendar.recurrencevalue import PyCalendarRecurrenceValue
+from pycalendar.requeststatusvalue import PyCalendarRequestStatusValue
+from pycalendar.urivalue import PyCalendarURIValue
+from pycalendar.utcoffsetvalue import PyCalendarUTCOffsetValue
+from pycalendar.value import PyCalendarValue
 import cStringIO as StringIO
-
-from attribute import PyCalendarAttribute
-from caladdressvalue import PyCalendarCalAddressValue
-from datetime import PyCalendarDateTime
-from datetimevalue import PyCalendarDateTimeValue
-from duration import PyCalendarDuration
-from durationvalue import PyCalendarDurationValue
-from integervalue import PyCalendarIntegerValue
-from multivalue import PyCalendarMultiValue
-from period import PyCalendarPeriod
-from periodvalue import PyCalendarPeriodValue
-from plaintextvalue import PyCalendarPlainTextValue
-from recurrence import PyCalendarRecurrence
-from recurrencevalue import PyCalendarRecurrenceValue
-from urivalue import PyCalendarURIValue
-from utcoffsetvalue import PyCalendarUTCOffsetValue
-from value import PyCalendarValue
-import definitions
-import stringutils
 
 class PyCalendarProperty(object):
 
-#    protected string mName
-#
-#    protected MultiMap mAttributes
-#
-#    protected ICalendarValue mValue
-#
+    sDefaultValueTypeMap = {
 
-    sDefaultValueTypeMap = None
-    sValueTypeMap = None
-    sTypeValueMap = None
-    sMultiValues = None
+        # 2445 ?4.8.1
+        definitions.cICalProperty_ATTACH           : PyCalendarValue.VALUETYPE_URI,
+        definitions.cICalProperty_CATEGORIES       : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_CLASS            : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_COMMENT          : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_DESCRIPTION      : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_GEO              : PyCalendarValue.VALUETYPE_GEO,
+        definitions.cICalProperty_LOCATION         : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_PERCENT_COMPLETE : PyCalendarValue.VALUETYPE_INTEGER,
+        definitions.cICalProperty_PRIORITY         : PyCalendarValue.VALUETYPE_INTEGER,
+        definitions.cICalProperty_RESOURCES        : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_STATUS           : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_SUMMARY          : PyCalendarValue.VALUETYPE_TEXT,
 
-    @staticmethod
-    def loadStatics():
-        PyCalendarProperty._init_map()
+        # 2445 ?4.8.2
+        definitions.cICalProperty_COMPLETED : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_DTEND     : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_DUE       : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_DTSTART   : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_DURATION  : PyCalendarValue.VALUETYPE_DURATION,
+        definitions.cICalProperty_FREEBUSY  : PyCalendarValue.VALUETYPE_PERIOD,
+        definitions.cICalProperty_TRANSP    : PyCalendarValue.VALUETYPE_TEXT,
 
-    def __init__(self, arg1 = None, arg2 = None, arg3 = None):
+        # 2445 ?4.8.3
+        definitions.cICalProperty_TZID         : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_TZNAME       : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_TZOFFSETFROM : PyCalendarValue.VALUETYPE_UTC_OFFSET,
+        definitions.cICalProperty_TZOFFSETTO   : PyCalendarValue.VALUETYPE_UTC_OFFSET,
+        definitions.cICalProperty_TZURL        : PyCalendarValue.VALUETYPE_URI,
+
+        # 2445 ?4.8.4
+        definitions.cICalProperty_ATTENDEE      : PyCalendarValue.VALUETYPE_CALADDRESS,
+        definitions.cICalProperty_CONTACT       : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_ORGANIZER     : PyCalendarValue.VALUETYPE_CALADDRESS,
+        definitions.cICalProperty_RECURRENCE_ID : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_RELATED_TO    : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_URL           : PyCalendarValue.VALUETYPE_URI,
+        definitions.cICalProperty_UID           : PyCalendarValue.VALUETYPE_TEXT,
+
+        # 2445 ?4.8.5
+        definitions.cICalProperty_EXDATE : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_EXRULE : PyCalendarValue.VALUETYPE_RECUR,
+        definitions.cICalProperty_RDATE  : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_RRULE  : PyCalendarValue.VALUETYPE_RECUR,
+
+        # 2445 ?4.8.6
+        definitions.cICalProperty_ACTION  : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_REPEAT  : PyCalendarValue.VALUETYPE_INTEGER,
+        definitions.cICalProperty_TRIGGER : PyCalendarValue.VALUETYPE_DURATION,
+
+        # 2445 ?4.8.7
+        definitions.cICalProperty_CREATED       : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_DTSTAMP       : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_LAST_MODIFIED : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_SEQUENCE      : PyCalendarValue.VALUETYPE_INTEGER,
+
+        # 2445 ?4.8.8
+        definitions.cICalProperty_REQUEST_STATUS : PyCalendarValue.VALUETYPE_REQUEST_STATUS,
+
+        # Apple Extensions
+        definitions.cICalProperty_XWRCALNAME : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_XWRCALDESC : PyCalendarValue.VALUETYPE_TEXT,
+
+        # Mulberry extensions
+        definitions.cICalProperty_ACTION_X_SPEAKTEXT  : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalProperty_ALARM_X_LASTTRIGGER : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalProperty_ALARM_X_ALARMSTATUS : PyCalendarValue.VALUETYPE_TEXT,
+    }
+
+    sValueTypeMap = {
+
+        # 2445 ?4.3
+        definitions.cICalValue_BINARY      : PyCalendarValue.VALUETYPE_BINARY,
+        definitions.cICalValue_BOOLEAN     : PyCalendarValue.VALUETYPE_BOOLEAN,
+        definitions.cICalValue_CAL_ADDRESS : PyCalendarValue.VALUETYPE_CALADDRESS,
+        definitions.cICalValue_DATE        : PyCalendarValue.VALUETYPE_DATE,
+        definitions.cICalValue_DATE_TIME   : PyCalendarValue.VALUETYPE_DATETIME,
+        definitions.cICalValue_DURATION    : PyCalendarValue.VALUETYPE_DURATION,
+        definitions.cICalValue_FLOAT       : PyCalendarValue.VALUETYPE_FLOAT,
+        definitions.cICalValue_INTEGER     : PyCalendarValue.VALUETYPE_INTEGER,
+        definitions.cICalValue_PERIOD      : PyCalendarValue.VALUETYPE_PERIOD,
+        definitions.cICalValue_RECUR       : PyCalendarValue.VALUETYPE_RECUR,
+        definitions.cICalValue_TEXT        : PyCalendarValue.VALUETYPE_TEXT,
+        definitions.cICalValue_TIME        : PyCalendarValue.VALUETYPE_TIME,
+        definitions.cICalValue_URI         : PyCalendarValue.VALUETYPE_URI,
+        definitions.cICalValue_UTC_OFFSET  : PyCalendarValue.VALUETYPE_UTC_OFFSET,
+    }
+
+    sTypeValueMap = {
+
+        # 2445 ?4.3
+        PyCalendarValue.VALUETYPE_BINARY         : definitions.cICalValue_BINARY,
+        PyCalendarValue.VALUETYPE_BOOLEAN        : definitions.cICalValue_BOOLEAN,
+        PyCalendarValue.VALUETYPE_CALADDRESS     : definitions.cICalValue_CAL_ADDRESS,
+        PyCalendarValue.VALUETYPE_DATE           : definitions.cICalValue_DATE,
+        PyCalendarValue.VALUETYPE_DATETIME       : definitions.cICalValue_DATE_TIME,
+        PyCalendarValue.VALUETYPE_DURATION       : definitions.cICalValue_DURATION,
+        PyCalendarValue.VALUETYPE_FLOAT          : definitions.cICalValue_FLOAT,
+        PyCalendarValue.VALUETYPE_GEO            : definitions.cICalValue_FLOAT,
+        PyCalendarValue.VALUETYPE_INTEGER        : definitions.cICalValue_INTEGER,
+        PyCalendarValue.VALUETYPE_PERIOD         : definitions.cICalValue_PERIOD,
+        PyCalendarValue.VALUETYPE_RECUR          : definitions.cICalValue_RECUR,
+        PyCalendarValue.VALUETYPE_TEXT           : definitions.cICalValue_TEXT,
+        PyCalendarValue.VALUETYPE_REQUEST_STATUS : definitions.cICalValue_TEXT,
+        PyCalendarValue.VALUETYPE_TIME           : definitions.cICalValue_TIME,
+        PyCalendarValue.VALUETYPE_URI            : definitions.cICalValue_URI,
+        PyCalendarValue.VALUETYPE_UTC_OFFSET     : definitions.cICalValue_UTC_OFFSET,
+    }
+
+    sMultiValues = set((
+        definitions.cICalProperty_CATEGORIES,
+        definitions.cICalProperty_RESOURCES,
+        definitions.cICalProperty_FREEBUSY,
+        definitions.cICalProperty_EXDATE,
+        definitions.cICalProperty_RDATE,
+    ))
+
+    def __init__(self, name = None, value = None, valuetype = None):
         self._init_PyCalendarProperty()
+        self.mName = name if name is not None else ""
 
-        arg1str = isinstance(arg1, str)
-        arg2str = isinstance(arg2, str)
-        if arg1str:
-            if isinstance(arg2, int) and (arg3 is None):
-                self.mName = arg1
-                self.init_attr_value_int(arg2)
-            elif arg2str and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_text(arg2, PyCalendarValue.VALUETYPE_TEXT)
-            elif arg2str and isinstance(arg3, int):
-                self.mName = arg1
-                self._init_attr_value_text(arg2, arg3)
-            elif isinstance(arg2, PyCalendarDateTime) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_datetime(arg2)
-            elif isinstance(arg2, list) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_datetimelist(arg2)
-            elif isinstance(arg2, PyCalendarDuration) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_duration(arg2)
-            elif isinstance(arg2, PyCalendarPeriod) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_period(arg2)
-            elif isinstance(arg2, PyCalendarRecurrence) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_recur(arg2)
-            elif isinstance(arg2, PyCalendarUTCOffsetValue) and (arg3 is None):
-                self.mName = arg1
-                self._init_attr_value_utcoffset(arg2)
-        elif isinstance(arg1, PyCalendarProperty) and (arg2 is None) and (arg3 is None):
-            self._copy_PyCalendarProperty(arg1)
+        if isinstance(value, int):
+            self._init_attr_value_int(value)
+
+        elif isinstance(value, str):
+            self._init_attr_value_text(value, valuetype if valuetype else PyCalendarProperty.sDefaultValueTypeMap.get(self.mName.upper(), PyCalendarValue.VALUETYPE_TEXT))
+
+        elif isinstance(value, PyCalendarDateTime):
+            self._init_attr_value_datetime(value)
+
+        elif isinstance(value, list):
+            if name.upper() == definitions.cICalProperty_REQUEST_STATUS:
+                self._init_attr_value_requeststatus(value)
+            else:
+                period_list = False
+                if len(value) != 0:
+                    period_list = isinstance(value[0], PyCalendarPeriod)
+                if period_list:
+                    self._init_attr_value_periodlist(value)
+                else:
+                    self._init_attr_value_datetimelist(value)
+
+        elif isinstance(value, PyCalendarDuration):
+            self._init_attr_value_duration(value)
+
+        elif isinstance(value, PyCalendarPeriod):
+            self._init_attr_value_period(value)
+
+        elif isinstance(value, PyCalendarRecurrence):
+            self._init_attr_value_recur(value)
+
+        elif isinstance(value, PyCalendarUTCOffsetValue):
+            self._init_attr_value_utcoffset(value)
+
+    def duplicate(self):
+        other = PyCalendarProperty(self.mName)
+        for attrname, attrs in self.mAttributes.items():
+            other.mAttributes[attrname] = [i.duplicate() for i in attrs]
+        other.mValue = self.mValue.duplicate()
+
+        return other
+
+    def __hash__(self):
+        return hash((
+            self.mName,
+            tuple([tuple(self.mAttributes[attrname]) for attrname in sorted(self.mAttributes.keys())]),
+            self.mValue,
+        ))
+
+    def __ne__(self, other): return not self.__eq__(other)
+    def __eq__(self, other):
+        if not isinstance(other, PyCalendarProperty): return False
+        return self.mName == other.mName and self.mValue == other.mValue and self.mAttributes == other.mAttributes
 
     def __repr__(self):
-        os = StringIO.StringIO()
-        self.generate(os)
-        return os.getvalue()
+        return "PyCalendarProperty: %s" % (self.getText(),)
 
     def __str__(self):
-        os = StringIO.StringIO()
-        self.generate(os)
-        return os.getvalue()
+        return self.getText()
 
     def getName(self):
         return self.mName
@@ -109,23 +232,33 @@ class PyCalendarProperty(object):
         return self.mAttributes
 
     def setAttributes(self, attributes):
-        self.mAttributes = attributes
+        self.mAttributes = dict([(k.upper(), v) for k,v in attributes.iteritems()])
 
     def hasAttribute(self, attr):
-        return self.mAttributes.has_key(attr)
+        return self.mAttributes.has_key(attr.upper())
 
     def getAttributeValue(self, attr):
-        return self.mAttributes[attr][0].getFirstValue()
+        return self.mAttributes[attr.upper()][0].getFirstValue()
 
     def addAttribute(self, attr):
-        self.mAttributes.setdefault(attr.getName(), []).append(attr)
+        self.mAttributes.setdefault(attr.getName().upper(), []).append(attr)
+
+    def replaceAttribute(self, attr):
+        self.mAttributes[attr.getName().upper()] = [attr]
 
     def removeAttributes(self, attr):
-        if self.mAttributes.has_key(attr):
-            del self.mAttributes[attr]
+        if self.mAttributes.has_key(attr.upper()):
+            del self.mAttributes[attr.upper()]
 
     def getValue(self):
         return self.mValue
+
+    def getBinaryValue(self):
+
+        if isinstance(self.mValue, PyCalendarBinaryValue):
+            return self.mValue
+        else:
+            return None
 
     def getCalAddressValue(self):
 
@@ -201,7 +334,7 @@ class PyCalendarProperty(object):
         # Look for attribute or value delimiter
         prop_name, txt = stringutils.strduptokenstr(data, ";:")
         if not prop_name:
-            return False
+            raise PyCalendarInvalidProperty("Invalid property", data)
 
         # We have the name
         self.mName = prop_name
@@ -209,41 +342,53 @@ class PyCalendarProperty(object):
         # TODO: Try to use static string for the name
 
         # Now loop getting data
-        while txt:
-            if txt[0] == ';':
-                # Parse attribute
-
-                # Move past delimiter
-                txt = txt[1:]
-
-                # Get quoted string or token
-                attribute_name, txt = stringutils.strduptokenstr(txt, "=")
-                if attribute_name is None:
-                    return False
-                txt = txt[1:]
-                attribute_value, txt = stringutils.strduptokenstr(txt, ":;,")
-                if attribute_value is None:
-                    return False
-
-                # Now add attribute value
-                attrvalue = PyCalendarAttribute(name = attribute_name, value=attribute_value)
-                self.mAttributes.setdefault(attribute_name, []).append(attrvalue)
-
-                # Look for additional values
-                while txt[0] == ',':
+        try:
+            while txt:
+                if txt[0] == ';':
+                    # Parse attribute
+    
+                    # Move past delimiter
                     txt = txt[1:]
-                    attribute_value2, txt = stringutils.strduptokenstr(txt, ":;,")
-                    if attribute_value2 is None:
-                        return False
-                    attrvalue.addValue(attribute_value2)
-            elif txt[0] == ':':
-                txt = txt[1:]
-                self.createValue(txt)
-                txt = None
+    
+                    # Get quoted string or token
+                    attribute_name, txt = stringutils.strduptokenstr(txt, "=")
+                    if attribute_name is None:
+                        raise PyCalendarInvalidProperty("Invalid property", data)
+                    txt = txt[1:]
+                    attribute_value, txt = stringutils.strduptokenstr(txt, ":;,")
+                    if attribute_value is None:
+                        raise PyCalendarInvalidProperty("Invalid property", data)
+    
+                    # Now add attribute value
+                    attrvalue = PyCalendarAttribute(name = attribute_name, value=attribute_value)
+                    self.mAttributes.setdefault(attribute_name.upper(), []).append(attrvalue)
+    
+                    # Look for additional values
+                    while txt[0] == ',':
+                        txt = txt[1:]
+                        attribute_value2, txt = stringutils.strduptokenstr(txt, ":;,")
+                        if attribute_value2 is None:
+                            raise PyCalendarInvalidProperty("Invalid property", data)
+                        attrvalue.addValue(attribute_value2)
+                elif txt[0] == ':':
+                    txt = txt[1:]
+                    self.createValue(txt)
+                    txt = None
+
+        except IndexError:
+            raise PyCalendarInvalidProperty("Invalid property", data)
 
         # We must have a value of some kind
-        return self.mValue is not None
+        if self.mValue is None:
+            raise PyCalendarInvalidProperty("Invalid property", data)
+        
+        return True
 
+
+    def getText(self):
+        os = StringIO.StringIO()
+        self.generate(os)
+        return os.getvalue()
 
     def generate(self, os):
 
@@ -254,7 +399,7 @@ class PyCalendarProperty(object):
     def generateFiltered(self, os, filter):
         
         # Check for property in filter and whether value is written out
-        test, novalue = filter.testPropertyValue(self.mName)
+        test, novalue = filter.testPropertyValue(self.mName.upper())
         if test:
             self.generateValue(os, novalue)
 
@@ -268,8 +413,8 @@ class PyCalendarProperty(object):
         sout.write(self.mName)
 
         # Write all attributes
-        for attrs in self.mAttributes.values():
-            for attr in attrs:
+        for key in sorted(self.mAttributes.keys()):
+            for attr in self.mAttributes[key]:
                 sout.write(";")
                 attr.generate(sout)
 
@@ -304,166 +449,74 @@ class PyCalendarProperty(object):
                     
                     line = temp[start:offset]
                     os.write(line)
-                    os.write("\n ")
+                    os.write("\r\n ")
                     written += offset - start
                     start = offset
     
-        os.write("\n")
+        os.write("\r\n")
     
     def _init_PyCalendarProperty(self):
         self.mName = ""
         self.mAttributes = {}
         self.mValue = None
 
-    def _copy_PyCalendarProperty(self, copyit):
-        self.mName = copyit.mName
-        self.mAttributes = {}
-        for attr in copyit.mAttributes.values():
-            self.mAttributes.setdefault(attr.getName(), []).append(PyCalendarAttribute(copyit=attr))
-        self.mValue = copyit.mValue.copy()
-
-    @staticmethod
-    def _init_map():
-        # Only if empty
-        if PyCalendarProperty.sDefaultValueTypeMap is None:
-            PyCalendarProperty.sDefaultValueTypeMap = {}
-
-            # 2445 ?4.8.1
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_ATTACH] = PyCalendarValue.VALUETYPE_BINARY
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_CATEGORIES] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_CLASS] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_COMMENT] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_DESCRIPTION] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_GEO] = PyCalendarValue.VALUETYPE_GEO
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_LOCATION] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_PERCENT_COMPLETE] = PyCalendarValue.VALUETYPE_INTEGER
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_PRIORITY] = PyCalendarValue.VALUETYPE_INTEGER
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_RESOURCES] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_STATUS] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_SUMMARY] = PyCalendarValue.VALUETYPE_TEXT
-
-            # 2445 ?4.8.2
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_COMPLETED] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_DTEND] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_DUE] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_DTSTART] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_DURATION] = PyCalendarValue.VALUETYPE_DURATION
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_FREEBUSY] = PyCalendarValue.VALUETYPE_PERIOD
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_TRANSP] = PyCalendarValue.VALUETYPE_TEXT
-
-            # 2445 ?4.8.3
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_TZID] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_TZNAME] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_TZOFFSETFROM] = PyCalendarValue.VALUETYPE_UTC_OFFSET
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_TZOFFSETTO] = PyCalendarValue.VALUETYPE_UTC_OFFSET
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_TZURL] = PyCalendarValue.VALUETYPE_URI
-
-            # 2445 ?4.8.4
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_ATTENDEE] = PyCalendarValue.VALUETYPE_CALADDRESS
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_CONTACT] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_ORGANIZER] = PyCalendarValue.VALUETYPE_CALADDRESS
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_RECURRENCE_ID] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_RELATED_TO] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_URL] = PyCalendarValue.VALUETYPE_URI
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_UID] = PyCalendarValue.VALUETYPE_TEXT
-
-            # 2445 ?4.8.5
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_EXDATE] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_EXRULE] = PyCalendarValue.VALUETYPE_RECUR
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_RDATE] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_RRULE] = PyCalendarValue.VALUETYPE_RECUR
-
-            # 2445 ?4.8.6
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_ACTION] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_REPEAT] = PyCalendarValue.VALUETYPE_INTEGER
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_TRIGGER] = PyCalendarValue.VALUETYPE_DURATION
-
-            # 2445 ?4.8.7
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_CREATED] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_DTSTAMP] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_LAST_MODIFIED] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_SEQUENCE] = PyCalendarValue.VALUETYPE_INTEGER
-
-            # Apple Extensions
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_XWRCALNAME] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_XWRCALDESC] = PyCalendarValue.VALUETYPE_TEXT
-
-            # Mulberry extensions
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_X_PRIVATE_RURL] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_X_PRIVATE_ETAG] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_ACTION_X_SPEAKTEXT] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_ALARM_X_LASTTRIGGER] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sDefaultValueTypeMap[definitions.cICalProperty_ALARM_X_ALARMSTATUS] = PyCalendarValue.VALUETYPE_TEXT
-
-        # Only if empty
-        if PyCalendarProperty.sValueTypeMap is None:
-            PyCalendarProperty.sValueTypeMap = {}
-
-            # 2445 ?4.3
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_BINARY] = PyCalendarValue.VALUETYPE_BINARY
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_BOOLEAN] = PyCalendarValue.VALUETYPE_BOOLEAN
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_CAL_ADDRESS] = PyCalendarValue.VALUETYPE_CALADDRESS
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_DATE] = PyCalendarValue.VALUETYPE_DATE
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_DATE_TIME] = PyCalendarValue.VALUETYPE_DATETIME
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_DURATION] = PyCalendarValue.VALUETYPE_DURATION
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_FLOAT] = PyCalendarValue.VALUETYPE_FLOAT
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_INTEGER] = PyCalendarValue.VALUETYPE_INTEGER
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_PERIOD] = PyCalendarValue.VALUETYPE_PERIOD
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_RECUR] = PyCalendarValue.VALUETYPE_RECUR
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_TEXT] = PyCalendarValue.VALUETYPE_TEXT
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_TIME] = PyCalendarValue.VALUETYPE_TIME
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_URI] = PyCalendarValue.VALUETYPE_URI
-            PyCalendarProperty.sValueTypeMap[definitions.cICalValue_UTC_OFFSET] = PyCalendarValue.VALUETYPE_UTC_OFFSET
-
-        if PyCalendarProperty.sTypeValueMap is None:
-            PyCalendarProperty.sTypeValueMap = {}
-
-            # 2445 ?4.3
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_BINARY] = definitions.cICalValue_BINARY
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_BOOLEAN] = definitions.cICalValue_BOOLEAN
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_CALADDRESS] = definitions.cICalValue_CAL_ADDRESS
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_DATE] = definitions.cICalValue_DATE
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_DATETIME] = definitions.cICalValue_DATE_TIME
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_DURATION] = definitions.cICalValue_DURATION
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_FLOAT] = definitions.cICalValue_FLOAT
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_GEO] = definitions.cICalValue_FLOAT
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_INTEGER] = definitions.cICalValue_INTEGER
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_PERIOD] = definitions.cICalValue_PERIOD
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_RECUR] = definitions.cICalValue_RECUR
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_TEXT] = definitions.cICalValue_TEXT
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_TIME] = definitions.cICalValue_TIME
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_URI] = definitions.cICalValue_URI
-            PyCalendarProperty.sTypeValueMap[PyCalendarValue.VALUETYPE_UTC_OFFSET] = definitions.cICalValue_UTC_OFFSET
-
-        if PyCalendarProperty.sMultiValues is None:
-            PyCalendarProperty.sMultiValues = set()
-
-            PyCalendarProperty.sMultiValues.add(definitions.cICalProperty_CATEGORIES)
-            PyCalendarProperty.sMultiValues.add(definitions.cICalProperty_RESOURCES)
-            PyCalendarProperty.sMultiValues.add(definitions.cICalProperty_FREEBUSY)
-            PyCalendarProperty.sMultiValues.add(definitions.cICalProperty_EXDATE)
-            PyCalendarProperty.sMultiValues.add(definitions.cICalProperty_RDATE)
-
     def createValue(self, data):
         # Tidy first
         self.mValue = None
 
         # Get value type from property name
-        type = PyCalendarProperty.sDefaultValueTypeMap.get(self.mName, PyCalendarValue.VALUETYPE_TEXT)
+        type = PyCalendarProperty.sDefaultValueTypeMap.get(self.mName.upper(), PyCalendarValue.VALUETYPE_TEXT)
 
         # Check whether custom value is set
         if self.mAttributes.has_key(definitions.cICalAttribute_VALUE):
             type = PyCalendarProperty.sValueTypeMap.get(self.getAttributeValue(definitions.cICalAttribute_VALUE), type)
 
         # Check for multivalued
-        if self.mName in PyCalendarProperty.sMultiValues:
+        if self.mName.upper() in PyCalendarProperty.sMultiValues:
             self.mValue = PyCalendarMultiValue(type)
         else:
             # Create the type
             self.mValue = PyCalendarValue.createFromType(type)
 
         # Now parse the data
-        self.mValue.parse(data)
+        try:
+            self.mValue.parse(data)
+        except ValueError:
+            raise PyCalendarInvalidProperty("Invalid property value", data)
+
+        # Special post-create for some types
+        if type in (PyCalendarValue.VALUETYPE_TIME, PyCalendarValue.VALUETYPE_DATETIME):
+            # Look for TZID attribute
+            tzid = None
+            if (self.hasAttribute(definitions.cICalAttribute_TZID)):
+                tzid = self.getAttributeValue(definitions.cICalAttribute_TZID)
+                
+                if isinstance(self.mValue, PyCalendarDateTimeValue):
+                    self.mValue.getValue().setTimezoneID(tzid)
+                elif isinstance(self.mValue, PyCalendarMultiValue):
+                    for item in self.mValue.getValues():
+                        if isinstance(item, PyCalendarDateTimeValue):
+                            item.getValue().setTimezoneID(tzid)
+
+    def setValue(self, value):
+        # Tidy first
+        self.mValue = None
+
+        # Get value type from property name
+        type = PyCalendarProperty.sDefaultValueTypeMap.get(self.mName.upper(), PyCalendarValue.VALUETYPE_TEXT)
+
+        # Check whether custom value is set
+        if self.mAttributes.has_key(definitions.cICalAttribute_VALUE):
+            type = PyCalendarProperty.sValueTypeMap.get(self.getAttributeValue(definitions.cICalAttribute_VALUE), type)
+
+        # Check for multivalued
+        if self.mName.upper() in PyCalendarProperty.sMultiValues:
+            self.mValue = PyCalendarMultiValue(type)
+        else:
+            # Create the type
+            self.mValue = PyCalendarValue.createFromType(type)
+
+        self.mValue.setValue(value)
 
         # Special post-create for some types
         if type in (PyCalendarValue.VALUETYPE_TIME, PyCalendarValue.VALUETYPE_DATETIME):
@@ -488,13 +541,13 @@ class PyCalendarProperty(object):
             return
 
         # See if current type is default for this property
-        found = self.sDefaultValueTypeMap.get(self.mName, None)
-        if found is not None:
-            default_type = found
-            if default_type != self.mValue.getType():
-                found2 = self.sTypeValueMap.get(self.mValue.getType(), None)
-                if found2 is not None:
-                    self.mAttributes.setdefault(definitions.cICalAttribute_VALUE, []).append(PyCalendarAttribute(name=definitions.cICalAttribute_VALUE, value=found2))
+        default_type = self.sDefaultValueTypeMap.get(self.mName.upper())
+        if default_type is not None:
+            actual_type = self.mValue.getType()
+            if default_type != actual_type:
+                actual_value = self.sTypeValueMap.get(actual_type)
+                if actual_value is not None:
+                    self.mAttributes.setdefault(definitions.cICalAttribute_VALUE, []).append(PyCalendarAttribute(name=definitions.cICalAttribute_VALUE, value=actual_value))
 
     # Creation
     def _init_attr_value_int(self, ival):
@@ -508,8 +561,15 @@ class PyCalendarProperty(object):
     def _init_attr_value_text(self, txt, value_type):
         # Value
         self.mValue = PyCalendarValue.createFromType(value_type)
-        if isinstance(self.mValue, PyCalendarPlainTextValue):
+        if isinstance(self.mValue, PyCalendarPlainTextValue) or isinstance(self.mValue, PyCalendarDummyValue):
             self.mValue.setValue(txt)
+
+        # Attributes
+        self.setupValueAttribute()
+
+    def _init_attr_value_requeststatus(self, reqstatus):
+        # Value
+        self.mValue = PyCalendarRequestStatusValue(reqstatus)
 
         # Attributes
         self.setupValueAttribute()
@@ -545,11 +605,20 @@ class PyCalendarProperty(object):
         # Look for timezone
         if ((len(dtl) > 0)
                 and not dtl[0].isDateOnly()
-                and not dtl[0].floating()):
+                and dtl[0].local()):
             if self.mAttributes.has_key(definitions.cICalAttribute_TZID):
                 del self.mAttributes[definitions.cICalAttribute_TZID]
             self.mAttributes.setdefault(definitions.cICalAttribute_TZID, []).append(
                     PyCalendarAttribute(name=definitions.cICalAttribute_TZID, value=dtl[0].getTimezoneID()))
+
+    def _init_attr_value_periodlist(self, periodlist):
+        # Value
+        self.mValue = PyCalendarMultiValue(PyCalendarValue.VALUETYPE_PERIOD)
+        for period in periodlist:
+            self.mValue.addValue(PyCalendarPeriodValue(period))
+
+        # Attributes
+        self.setupValueAttribute()
 
     def _init_attr_value_duration(self, du):
         # Value
@@ -581,19 +650,3 @@ class PyCalendarProperty(object):
 
         # Attributes
         self.setupValueAttribute()
-
-PyCalendarProperty.loadStatics()
-
-if __name__ == '__main__':
-    prop = PyCalendarProperty()
-    prop.parse("DTSTART;TZID=\"US/Eastern\":20060226T120000")
-    io = StringIO.StringIO()
-    prop.generate(io)
-    print io.getvalue()
-    
-    prop = PyCalendarProperty(definitions.cICalProperty_DTSTAMP,
-                              PyCalendarDateTime.getNowUTC())
-    prop.generate(io)
-    print io.getvalue()
-
-    

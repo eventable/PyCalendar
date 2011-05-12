@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,38 +14,16 @@
 #    limitations under the License.
 ##
 
-from component import PyCalendarComponent
+from pycalendar import definitions
 from vtimezoneelement import PyCalendarVTimezoneElement
-import definitions
 
 class PyCalendarVTimezoneDaylight(PyCalendarVTimezoneElement):
 
-    sBeginDelimiter = definitions.cICalComponent_BEGINDAYLIGHT
+    def __init__(self, parent=None):
+        super(PyCalendarVTimezoneDaylight, self).__init__(parent=parent)
 
-    sEndDelimiter = definitions.cICalComponent_ENDDAYLIGHT
-
-    @staticmethod
-    def getVBegin():
-        return PyCalendarVTimezoneDaylight.sBeginDelimiter
-
-    @staticmethod
-    def getVEnd():
-        return PyCalendarVTimezoneDaylight.sEndDelimiter
-
-    def __init__(self, calendar=None, copyit=None):
-        if calendar is not None:
-            super(PyCalendarVTimezoneDaylight, self).__init__(calendar=calendar)
-        elif copyit is not None:
-            super(PyCalendarVTimezoneDaylight, self).__init__(copyit=copyit)
-
-    def clone_it(self):
-        return PyCalendarVTimezoneDaylight(copyit=self)
+    def duplicate(self, parent=None):
+        return super(PyCalendarVTimezoneDaylight, self).duplicate(parent=parent)
 
     def getType(self):
-        return PyCalendarComponent.eVTIMEZONEDAYLIGHT
-
-    def getBeginDelimiter(self):
-        return PyCalendarVTimezoneDaylight.sBeginDelimiter
-
-    def getEndDelimiter(self):
-        return PyCalendarVTimezoneDaylight.sEndDelimiter
+        return definitions.cICalComponent_DAYLIGHT

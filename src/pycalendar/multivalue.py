@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,18 +14,22 @@
 #    limitations under the License.
 ##
 
-from value import PyCalendarValue
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarMultiValue( PyCalendarValue ):
 
-    def __init__( self, type = None, copyit = None ):
+    def __init__( self, type ):
 
-        if type:
-            self.mType = type
-            self.mValues = []
-        elif copyit:
-            self.mType = copyit.mType
-            self.mValues = [i.copy() for i in copyit.mValues]
+        self.mType = type
+        self.mValues = []
+
+    def __hash__(self):
+        return hash(tuple(self.mValues))
+
+    def duplicate(self):
+        other = PyCalendarMultiValue(self.mType)
+        other.mValues = [i.duplicate() for i in self.mValues]
+        return other
 
     def getType( self ):
         return self.mType
@@ -33,11 +37,17 @@ class PyCalendarMultiValue( PyCalendarValue ):
     def getRealType(self):
         return PyCalendarValue.VALUETYPE_MULTIVALUE
 
+    def getValue( self ):
+        return self.mValues
+
     def getValues( self ):
         return self.mValues
 
     def addValue( self, value ):
         self.mValues.append( value )
+
+    def setValue(self, value):
+        self.mValues = [PyCalendarValue.createFromType(self.mType).setValue(v) for v in value]
 
     def parse( self, data ):
         # Tokenize on comma

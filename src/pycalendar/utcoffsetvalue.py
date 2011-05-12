@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -16,43 +16,45 @@
 
 # iCalendar UTC Offset value
 
-from value import PyCalendarValue
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarUTCOffsetValue( PyCalendarValue ):
 
-    def __init__( self, copyit = None ):
-        
-        if copyit:
-            self.mValue = copyit.mValue
-        else:
-            self.mValue = 0
+    def __init__( self, value = 0 ):
+        self.mValue = value
+
+    def duplicate(self):
+        return PyCalendarUTCOffsetValue(self.mValue)
 
     def getType( self ):
         return PyCalendarValue.VALUETYPE_UTC_OFFSET
 
     def parse( self, data ):
         # Must be of specific lengths
-        if ( len( data ) != 5 ) and ( len( data ) != 7 ):
+        datalen = len(data)
+        if datalen not in (5, 7):
             self.mValue = 0
-            return
+            raise ValueError
 
         # Get sign
+        if data[0] not in ('+', '-'):
+            raise ValueError
         plus = ( data[0] == '+' )
 
         # Get hours
-        hours = int( data[1:3] )
+        hours = int(data[1:3])
 
         # Get minutes
-        mins = int( data[3:5] )
+        mins = int(data[3:5])
 
         # Get seconds if present
         secs = 0
-        if ( len( data ) == 7 ):
-            secs = int( data[5:] )
+        if datalen == 7 :
+            secs = int(data[5:])
 
 
-        self.mValue = ( ( hours * 60 ) + mins ) * 60 + secs
-        if ( not plus ):
+        self.mValue = ((hours * 60) + mins) * 60 + secs
+        if not plus:
             self.mValue = -self.mValue
  
     # os - StringIO object
