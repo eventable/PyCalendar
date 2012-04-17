@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,26 +14,27 @@
 #    limitations under the License.
 ##
 
-from datetime import PyCalendarDateTime
-from utils import set_difference
+from pycalendar.utils import set_difference
 
 class PyCalendarRecurrenceSet(object):
 
-    def __init__(self, copyit=None):
-        if copyit is None:
-            self.mRrules = []
-            self.mExrules = []
-            self.mRdates = []
-            self.mExdates = []
-            self.mRperiods = []
-            self.mExperiods = []
-        else:
-            self.mRrules = copyit.self.mRrules
-            self.mExrules = copyit.self.mExrules
-            self.mRdates = copyit.self.mRdates
-            self.mExdates = copyit.self.mExdates
-            self.mRperiods = copyit.self.mRperiods
-            self.mExperiods = copyit.self.mExperiods
+    def __init__(self):
+        self.mRrules = []
+        self.mExrules = []
+        self.mRdates = []
+        self.mExdates = []
+        self.mRperiods = []
+        self.mExperiods = []
+
+    def duplicate(self):
+        other = PyCalendarRecurrenceSet()
+        other.mRrules = [i.duplicate() for i in self.mRrules]
+        other.mExrules = [i.duplicate() for i in self.mExrules]
+        other.mRdates = [i.duplicate() for i in self.mRdates]
+        other.mExdates = [i.duplicate() for i in self.mExdates]
+        other.mRperiods = [i.duplicate() for i in self.mRperiods]
+        other.mExperiods = [i.duplicate() for i in self.mExperiods]
+        return other
 
     def hasRecurrence(self):
         return ((len(self.mRrules) != 0) or (len(self.mRdates) != 0) or (len(self.mRperiods) != 0)
@@ -103,8 +104,8 @@ class PyCalendarRecurrenceSet(object):
         dt1 = dates1[:]
         dt2 = dates2[:]
 
-        dt1.sort(cmp=PyCalendarDateTime.sort)
-        dt2.sort(cmp=PyCalendarDateTime.sort)
+        dt1.sort(key=lambda x:x.getPosixTime())
+        dt2.sort(key=lambda x:x.getPosixTime())
 
         return dt1.equal(dt2)
 
@@ -161,28 +162,38 @@ class PyCalendarRecurrenceSet(object):
         return self.mExperiods
 
     def expand(self, start, range, items, float_offset=0):
+        # Need to return whether the limit was applied or not
+        limited = False
+
         # Now create list of items to include
         include = []
 
         # Always include the initial DTSTART if within the range
         if range.isDateWithinPeriod(start):
             include.append(start)
+        else:
+            limited = True
 
         # RRULES
         for iter in self.mRrules:
-            iter.expand(start, range, include, float_offset=float_offset)
+            if iter.expand(start, range, include, float_offset=float_offset):
+                limited = True
 
         # RDATES
         for iter in self.mRdates:
             if range.isDateWithinPeriod(iter):
                 include.append(iter)
+            else:
+                limited = True
         for iter in self.mRperiods:
             if range.isPeriodOverlap(iter):
                 include.append(iter.getStart())
+            else:
+                limited = True
 
         # Make sure the list is unique
         include = [x for x in set(include)]
-        include.sort(cmp=PyCalendarDateTime.sort)
+        include.sort(key=lambda x:x.getPosixTime())
 
         # Now create list of items to exclude
         exclude = []
@@ -201,11 +212,12 @@ class PyCalendarRecurrenceSet(object):
 
         # Make sure the list is unique
         exclude = [x for x in set(exclude)]
-        exclude.sort(cmp=PyCalendarDateTime.sort)
+        exclude.sort(key=lambda x:x.getPosixTime())
 
         # Add difference between to the two sets (include - exclude) to the
         # results
         items.extend(set_difference(include, exclude))
+        return limited
 
     def changed(self):
         # RRULES

@@ -16,17 +16,16 @@
 
 # iCalendar UTC Offset value
 
-from value import PyCalendarValue
+from pycalendar import xmldefs
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarIntegerValue( PyCalendarValue ):
 
-    def __init__(self, value = None, copyit = None):
-        if value:
-            self.mValue = value
-        elif copyit:
-            self.mValue = copyit.mValue
-        else:
-            self.mValue = 0
+    def __init__(self, value = None):
+        self.mValue = value if value is not None else 0
+
+    def duplicate(self):
+        return PyCalendarIntegerValue(self.mValue)
 
     def getType(self):
         return PyCalendarValue.VALUETYPE_INTEGER
@@ -41,10 +40,14 @@ class PyCalendarIntegerValue( PyCalendarValue ):
         except:
             pass
 
+    def writeXML(self, node, namespace):
+        value = self.getXMLNode(node, namespace)
+        value.text = str(self.mValue)
+
     def getValue(self):
         return self.mValue
 
     def setValue( self, value ):
         self.mValue = value
 
-PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_INTEGER, PyCalendarIntegerValue)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_INTEGER, PyCalendarIntegerValue, xmldefs.value_integer)

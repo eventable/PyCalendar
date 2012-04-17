@@ -16,16 +16,15 @@
 
 # iCalendar UTC Offset value
 
-from value import PyCalendarValue
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarPlainTextValue( PyCalendarValue ):
 
-    def __init__(self, copyit=None):
-        
-        if copyit:
-            self.mValue = copyit.mValue
-        else:
-            self.mValue = ''
+    def __init__(self, value=''):
+        self.mValue = value
+
+    def duplicate(self):
+        return self.__class__(self.mValue)
 
     def parse( self, data ):
         # No decoding required
@@ -38,6 +37,10 @@ class PyCalendarPlainTextValue( PyCalendarValue ):
             os.write( self.mValue )
         except:
             pass
+
+    def writeXML(self, node, namespace):
+        value = self.getXMLNode(node, namespace)
+        value.text = self.mValue
 
     def getValue(self):
         return self.mValue

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,25 +14,38 @@
 #    limitations under the License.
 ##
 
-import stringutils
+from pycalendar import stringutils
 
 class PyCalendarTimezone(object):
+    """
+    Wrapper around a timezone specification. There are three options:
     
-    def __init__(self, utc=None, tzid=None, copyit=None):
+    UTC - when mUTC is True
+    TZID - when mUTC is False and tzid is a str
+    UTCOFFSET - when mUTC is False and tzid is an int
+    """
+    
+    def __init__(self, utc=None, tzid=None):
         
         if utc is not None:
             self.mUTC = utc
             self.mTimezone = tzid
-        elif copyit is not None:
-            self._copy_PyCalendarTimezone(copyit)
+        elif tzid is not None:
+            self.mUTC = tzid.lower() == 'utc'
+            self.mTimezone = None if tzid.lower() == 'utc' else tzid
         else:
             self.mUTC = True
             self.mTimezone = None
     
-            # Copy defauilt timezone if it exists
+            # Copy default timezone if it exists
             from manager import PyCalendarManager
             if PyCalendarManager.sICalendarManager is not None:
-                self._copy_PyCalendarTimezone(PyCalendarManager.sICalendarManager.getDefaultTimezone())
+                defaulttz = PyCalendarManager.sICalendarManager.getDefaultTimezone()
+                self.mUTC = defaulttz.mUTC
+                self.mTimezone = defaulttz.mTimezone
+
+    def duplicate(self):
+        return PyCalendarTimezone(self.mUTC, self.mTimezone)
 
     def equals(self, comp):
         # Always match if any one of them is 'floating'
@@ -70,34 +83,37 @@ class PyCalendarTimezone(object):
         self.mTimezone = tzid
 
     def floating(self):
-        return not self.mUTC and not self.mTimezone
+        return not self.mUTC and self.mTimezone is None
 
     def hasTZID(self):
-        return not self.mUTC and self.mTimezone
+        return not self.mUTC and self.mTimezone is not None
 
     def timeZoneSecondsOffset(self, dt):
         from manager import PyCalendarManager
-        from calendar import PyCalendar
+        from timezonedb import PyCalendarTimezoneDatabase
         if self.mUTC:
             return 0
-        elif not self.mTimezone:
-            return PyCalendar.sICalendar.getTimezoneOffsetSeconds(PyCalendarManager.sICalendarManager.getDefaultTimezone().getTimezoneID(), dt)
-
-        # Look up timezone and resolve date using default timezones
-        return PyCalendar.sICalendar.getTimezoneOffsetSeconds(self.mTimezone, dt)
+        elif self.mTimezone is None:
+            return PyCalendarTimezoneDatabase.getTimezoneOffsetSeconds(PyCalendarManager.sICalendarManager.getDefaultTimezone().getTimezoneID(), dt)
+        elif isinstance(self.mTimezone, int):
+            return self.mTimezone
+        else:
+            # Look up timezone and resolve date using default timezones
+            return PyCalendarTimezoneDatabase.getTimezoneOffsetSeconds(self.mTimezone, dt)
 
     def timeZoneDescriptor(self, dt):
         from manager import PyCalendarManager
-        from calendar import PyCalendar
+        from timezonedb import PyCalendarTimezoneDatabase
         if self.mUTC:
             return "(UTC)"
-        elif not self.mTimezone:
-            return PyCalendar.sICalendar.getTimezoneDescriptor(PyCalendarManager.sICalendarManager.getDefaultTimezone().getTimezoneID(), dt)
-
-        # Look up timezone and resolve date using default timezones
-        return PyCalendar.sICalendar.getTimezoneDescriptor(self.mTimezone, dt)
-
-    def _copy_PyCalendarTimezone(self, copy):
-        self.mUTC = copy.mUTC
-        self.mTimezone = copy.mTimezone
+        elif self.mTimezone is None:
+            return PyCalendarTimezoneDatabase.getTimezoneDescriptor(PyCalendarManager.sICalendarManager.getDefaultTimezone().getTimezoneID(), dt)
+        elif isinstance(self.mTimezone, int):
+            sign = "-" if self.mTimezone < 0 else "+"
+            hours = abs(self.mTimezone) / 3600
+            minutes = divmod(abs(self.mTimezone) / 60, 60)[1]
+            return "%s%02d%02d" % (sign, hours, minutes,)
+        else:
+            # Look up timezone and resolve date using default timezones
+            return PyCalendarTimezoneDatabase.getTimezoneDescriptor(self.mTimezone, dt)
     

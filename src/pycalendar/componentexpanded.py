@@ -14,7 +14,7 @@
 #    limitations under the License.
 ##
 
-from datetime import PyCalendarDateTime
+from pycalendar.datetime import PyCalendarDateTime
 
 class PyCalendarComponentExpanded(object):
 
@@ -48,14 +48,18 @@ class PyCalendarComponentExpanded(object):
         else:
             return e1.mInstanceStart < e2.mInstanceStart
 
-    def __init__(self, owner=None, rid=None, copyit=None):
+    def __init__(self, owner, rid):
 
-        if owner is not None:
-            self.mOwner = owner
-            self.initFromOwner(rid)
-        elif copyit is not None:
-            self._copy_PyCalendarComponentExpanded(copyit)
+        self.mOwner = owner
+        self.initFromOwner(rid)
 
+    def duplicate(self):
+        other = PyCalendarComponentExpanded(self.mOwner, None)
+        other.mInstanceStart = self.mInstanceStart.duplicate()
+        other.mInstanceEnd = self.mInstanceEnd.duplicate()
+        other.mRecurring = self.mRecurring
+        return other
+        
     def close(self):
         # Clean-up
         self.mOwner = None
@@ -116,7 +120,7 @@ class PyCalendarComponentExpanded(object):
             if self.mOwner.hasEnd():
                 self.mInstanceEnd = self.mInstanceStart + (self.mOwner.getEnd() - self.mOwner.getStart())
             else:
-                self.mInstanceEnd = PyCalendarDateTime(copyit=self.mInstanceStart)
+                self.mInstanceEnd = self.mInstanceStart.duplicate()
 
             self.mRecurring = True
 
@@ -140,9 +144,3 @@ class PyCalendarComponentExpanded(object):
             self.mInstanceEnd = self.mInstanceStart + (self.mOwner.getEnd() - self.mOwner.getStart())
 
             self.mRecurring = True
-
-    def _copy_ICalendarComponentExpanded(self, copy):
-        self.mOwner = copy.self.mOwner
-        self.mInstanceStart = PyCalendarDateTime(copyit=copy.mInstanceStart)
-        self.mInstanceEnd = PyCalendarDateTime(copyit=copy.mInstanceEnd)
-        self.mRecurring = copy.mRecurring

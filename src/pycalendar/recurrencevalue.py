@@ -14,18 +14,17 @@
 #    limitations under the License.
 ##
 
-from recurrence import PyCalendarRecurrence
-from value import PyCalendarValue
+from pycalendar import xmldefs
+from pycalendar.recurrence import PyCalendarRecurrence
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarRecurrenceValue( PyCalendarValue ):
 
-    def __init__( self, value = None, copyit = None ):
-        if value:
-            self.mValue = value
-        elif copyit:
-            self.mValue = PyCalendarRecurrence( copyit.mValue )
-        else:
-            self.mValue = PyCalendarRecurrence()
+    def __init__( self, value = None ):
+        self.mValue = value if value is not None else PyCalendarRecurrence()
+
+    def duplicate(self):
+        return PyCalendarRecurrenceValue(self.mValue.duplicate())
 
     def getType( self ):
         return PyCalendarValue.VALUETYPE_RECUR
@@ -36,10 +35,13 @@ class PyCalendarRecurrenceValue( PyCalendarValue ):
     def generate( self, os ):
         self.mValue.generate( os )
 
+    def writeXML(self, node, namespace):
+        self.mValue.writeXML(node, namespace)
+
     def getValue( self ):
         return self.mValue
 
     def setValue( self, value ):
         self.mValue = value
 
-PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_RECUR, PyCalendarRecurrenceValue)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_RECUR, PyCalendarRecurrenceValue, xmldefs.value_recur)

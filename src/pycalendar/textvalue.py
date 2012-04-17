@@ -16,9 +16,9 @@
 
 # iCalendar UTC Offset value
 
-from plaintextvalue import PyCalendarPlainTextValue
-from value import PyCalendarValue
-import utils
+from pycalendar import utils, xmldefs
+from pycalendar.plaintextvalue import PyCalendarPlainTextValue
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarTextValue( PyCalendarPlainTextValue ):
 
@@ -37,5 +37,5 @@ class PyCalendarTextValue( PyCalendarPlainTextValue ):
         except:
             pass
 
-PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_TEXT, PyCalendarTextValue)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_TEXT, PyCalendarTextValue, xmldefs.value_text)
     

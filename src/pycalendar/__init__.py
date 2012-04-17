@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -16,17 +16,20 @@
 
 __all__ = [
     "attribute",
+    "available",
+    "binaryvalue",
     "caladdressvalue",
     "calendar",
     "datetime",
     "datetimevalue",
     "definitions",
-    "dummyvalue",
     "duration",
     "durationvalue",
+    "exceptions",
     "freebusy",
     "integervalue",
     "locale",
+    "manager",
     "multivalue",
     "period",
     "periodvalue",
@@ -34,21 +37,29 @@ __all__ = [
     "property",
     "recurrence",
     "recurrencevalue",
+    "requeststatusvalue",
     "textvalue",
     "timezone",
+    "timezonedb",
+    "unknownvalue",
     "urivalue",
     "utcoffsetvalue",
-    "utils",
+    "valarm",
     "value",
     "vevent",
     "vfreebusy",
-    "stringutils"
+    "vjournal",
+    "vtimezone",
+    "vtimezonedaylight",
+    "vtimezonestandard",
+    "vtodo",
+    "vunknown",
 ]
 
 # Import these to register the values
-import caladdressvalue, datetimevalue, dummyvalue, durationvalue, \
+import binaryvalue, caladdressvalue, datetimevalue, durationvalue, \
         integervalue, multivalue, periodvalue, recurrencevalue, \
-        textvalue, urivalue, utcoffsetvalue
+        requeststatusvalue, textvalue, unknownvalue, urivalue, utcoffsetvalue
     
 # Import these to force static initialisation
 import property

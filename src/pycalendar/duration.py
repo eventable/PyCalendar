@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2011 Cyrus Daboo. All rights reserved.
 #    
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
 #    limitations under the License.
 ##
 
-import re
+from pycalendar.parser import ParserContext
+from pycalendar.stringutils import strtoul
+from pycalendar.valueutils import ValueMixin
 
-class PyCalendarDuration(object):
+class PyCalendarDuration(ValueMixin):
 
-    def __init__(self, duration=None, copyit=None):
+    def __init__(self, duration = None, weeks=0, days=0, hours=0, minutes=0, seconds=0):
         self.mForward = True
 
         self.mWeeks = 0
@@ -28,17 +30,34 @@ class PyCalendarDuration(object):
         self.mMinutes = 0
         self.mSeconds = 0
         
-        if (duration is not None):
-            self.setDuration(duration)
-        elif (copyit is not None):
-            self.mForward = copyit.mForward
-    
-            self.mWeeks = copyit.mWeeks
-            self.mDays = copyit.mDays
-    
-            self.mHours = copyit.mHours
-            self.mMinutes = copyit.mMinutes
-            self.mSeconds = copyit.mSeconds
+        if duration is None:
+            duration = (((weeks * 7 + days) * 24 + hours) * 60 + minutes) * 60 + seconds
+        self.setDuration(duration)
+
+    def duplicate(self):
+        other = PyCalendarDuration(None)
+        other.mForward = self.mForward
+
+        other.mWeeks = self.mWeeks
+        other.mDays = self.mDays
+
+        other.mHours = self.mHours
+        other.mMinutes = self.mMinutes
+        other.mSeconds = self.mSeconds
+
+        return other
+
+    def __hash__(self):
+        return hash(self.getTotalSeconds())
+
+    def __eq__( self, comp ):
+        return self.getTotalSeconds() == comp.getTotalSeconds()
+
+    def __gt__( self, comp ):
+        return self.getTotalSeconds() > comp.getTotalSeconds()
+
+    def __lt__( self, comp ):
+        return self.getTotalSeconds() <  comp.getTotalSeconds()
 
     def getTotalSeconds(self):
         return [1, -1][not self.mForward] \
@@ -94,116 +113,115 @@ class PyCalendarDuration(object):
     def getSeconds(self):
         return self.mSeconds
 
+    @classmethod
+    def parseText(cls, data):
+        dur = cls()
+        dur.parse(data)
+        return dur
+
     def parse(self, data):
         # parse format ([+]/-) "P" (dur-date / dur-time / dur-week)
 
-        regex = re.compile(r'([+/-]?)(P)([0-9]*)([DW]?)([T]?)([0-9]*)([HMS]?)([0-9]*)([MS]?)([0-9]*)([S]?)')
-        st = regex.search(data).groups()
-        st = [x for x in st if x != '']
-        st.reverse()
-        if len(st) == 0:
-            return
-        token = st.pop()
+        try:
+            offset = 0
+            maxoffset = len(data)
+    
+            # Look for +/-
+            self.mForward = True
+            if data[offset] in ('-', '+'):
+                self.mForward = data[offset] == '+'
+                offset += 1
+    
+            # Must have a 'P'
+            if data[offset] != "P":
+                raise ValueError
+            offset += 1
+            
+            # Look for time
+            if data[offset] != "T":
+                # Must have a number
+                num, offset = strtoul(data, offset)
+    
+                # Now look at character
+                if data[offset] == "W":
+                    # Have a number of weeks
+                    self.mWeeks = num
+                    offset += 1
+    
+                    # There cannot be anything else after this so just exit
+                    if offset != maxoffset:
+                        if ParserContext.INVALID_DURATION_VALUE != ParserContext.PARSER_RAISE:
+                            return
+                        raise ValueError
+                    return
+                elif data[offset] == "D":
+                    # Have a number of days
+                    self.mDays = num
+                    offset += 1
+    
+                    # Look for more data - exit if none
+                    if offset == maxoffset:
+                        return
+    
+                    # Look for time - exit if none
+                    if data[offset] != "T":
+                        raise ValueError
+                else:
+                    # Error in format
+                    raise ValueError
+    
+            # Have time
+            offset += 1
 
-        # Look for +/-
-        self.mForward = True
-        if token == "-":
-            self.mForward = False
-            if len(st) == 0:
-                return
-            token = st.pop()
-        elif token == "+":
-            if len(st) == 0:
-                return
-            token = st.pop()
-
-        # Must have a 'P'
-        if token != "P":
-            return
-        
-        # Look for time
-        if len(st) == 0:
-            return
-        token = st.pop()
-        if token != "T":
-            # Must have a number
-            num = int(token)
-
-            # Now look at character
-            if len(st) == 0:
-                return
-            token = st.pop()
-            if token == "W":
-                # Have a number of weeks
-                self.mWeeks = num
-
-                # There cannot bew anything else after this so just exit
-                return
-            elif token == "D":
-                # Have a number of days
-                self.mDays = num
-
+            # Strictly speaking T must always be followed by time values, but some clients
+            # send T with no additional text
+            if offset == maxoffset:
+                if ParserContext.INVALID_DURATION_VALUE == ParserContext.PARSER_RAISE:
+                    raise ValueError
+                else:
+                    return
+            num, offset = strtoul(data, offset)
+    
+            # Look for hour
+            if data[offset] == "H":
+                # Get hours
+                self.mHours = num
+                offset += 1
+    
                 # Look for more data - exit if none
-                if len(st) == 0:
+                if offset == maxoffset:
                     return
-                token = st.pop()
-
-                # Look for time - exit if none
-                if token != "T":
+    
+                # Parse the next number
+                num, offset = strtoul(data, offset)
+    
+            # Look for minute
+            if data[offset] == "M":
+                # Get hours
+                self.mMinutes = num
+                offset += 1
+    
+                # Look for more data - exit if none
+                if offset == maxoffset:
                     return
-            else:
-                # Error in format
-                return
+    
+                # Parse the next number
+                num, offset = strtoul(data, offset)
+    
+            # Look for seconds
+            if data[offset] == "S":
+                # Get hours
+                self.mSeconds = num
+                offset += 1
 
-        # Have time
-        if len(st) == 0:
-            return
-        token = st.pop()
-        num = int(token)
+                # No more data - exit
+                if offset == maxoffset:
+                    return
+    
+            raise ValueError
 
-        # Look for hour
-        if len(st) == 0:
-            return
-        token = st.pop()
-        if token == "H":
-            # Get hours
-            self.mHours = num
-
-            # Look for more data - exit if none
-            if len(st) == 0:
-                return
-
-            # Parse the next number
-            token = st.pop()
-            num = int(token)
-
-            # Parse the next char
-            if len(st) == 0:
-                return
-            token = st.pop()
-
-        # Look for minute
-        if token == "M":
-            # Get hours
-            self.mMinutes = num
-
-            # Look for more data - exit if none
-            if len(st) == 0:
-                return
-
-            # Parse the next number
-            token = st.pop()
-            num = int(token)
-
-            # Parse the next char
-            if len(st) == 0:
-                return
-            token = st.pop()
-
-        # Look for seconds
-        if token == "S":
-            # Get hours
-            self.mSeconds = num
+        except IndexError:
+            raise ValueError
 
     def generate(self, os):
         try:
@@ -232,3 +250,6 @@ class PyCalendarDuration(object):
                     os.write("T0S")
         except:
             pass
+
+    def writeXML(self, node, namespace):
+        node.text = self.getText()

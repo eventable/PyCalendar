@@ -14,18 +14,17 @@
 #    limitations under the License.
 ##
 
-from duration import PyCalendarDuration
-from value import PyCalendarValue
+from pycalendar import xmldefs
+from pycalendar.duration import PyCalendarDuration
+from pycalendar.value import PyCalendarValue
 
 class PyCalendarDurationValue(PyCalendarValue):
 
-    def __init__(self, value = None, copyit = None):
-        if value:
-            self.mValue = value
-        elif copyit:
-            self.mValue = PyCalendarDuration(duration=copyit.mValue)
-        else:
-            self.mValue = PyCalendarDuration()
+    def __init__(self, value = None):
+        self.mValue = value if value is not None else PyCalendarDuration()
+
+    def duplicate(self):
+        return PyCalendarDurationValue(self.mValue.duplicate())
 
     def getType(self):
         return PyCalendarValue.VALUETYPE_DURATION
@@ -36,10 +35,14 @@ class PyCalendarDurationValue(PyCalendarValue):
     def generate(self, os):
         self.mValue.generate(os)
 
+    def writeXML(self, node, namespace):
+        value = self.getXMLNode(node, namespace)
+        value.text = self.mValue.writeXML()
+
     def getValue(self):
         return self.mValue
 
     def setValue(self,  value):
         self.mValue = value
 
-PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_DURATION, PyCalendarDurationValue)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_DURATION, PyCalendarDurationValue, xmldefs.value_duration)
