@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2012-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
 ##
 
 from pycalendar.parser import ParserContext
-from pycalendar.urivalue import URIValue
-from pycalendar.icalendar.property import Property
+from pycalendar.urivalue import PyCalendarURIValue
+from pycalendar.vcard.property import Property
 import unittest
 
-class TestURIValue(unittest.TestCase):
+class TestNValue(unittest.TestCase):
 
     def testParseValue(self):
 
@@ -35,8 +35,8 @@ class TestURIValue(unittest.TestCase):
         )
 
         for item, result in items:
-            req = URIValue()
-            req.parse(item, "icalendar")
+            req = PyCalendarURIValue()
+            req.parse(item)
             test = req.getText()
             self.assertEqual(test, result, "Failed to parse and re-generate '%s'" % (item,))
 
@@ -48,8 +48,8 @@ class TestURIValue(unittest.TestCase):
         )
 
         for item, result in items:
-            req = URIValue()
-            req.parse(item, "icalendar")
+            req = PyCalendarURIValue()
+            req.parse(item)
             test = req.getText()
             self.assertEqual(test, result, "Failed to parse and re-generate '%s'" % (item,))
 
@@ -68,7 +68,8 @@ class TestURIValue(unittest.TestCase):
         )
 
         for item, result in items:
-            prop = Property.parseText(item)
+            prop = Property()
+            prop.parse(item)
             test = prop.getText()
             self.assertEqual(test, result + "\r\n", "Failed to parse and re-generate '%s'" % (item,))
 
@@ -80,6 +81,7 @@ class TestURIValue(unittest.TestCase):
         )
 
         for item, result in items:
-            prop = Property.parseText(item)
+            prop = Property()
+            prop.parse(item)
             test = prop.getText()
             self.assertEqual(test, result + "\r\n", "Failed to parse and re-generate '%s'" % (item,))

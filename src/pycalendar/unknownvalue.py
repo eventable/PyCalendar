@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 # iCalendar Unknown value - one whose default type we don't know about
 
-from pycalendar import xmldefinitions
-from pycalendar.plaintextvalue import PlainTextValue
-from pycalendar.value import Value
+from pycalendar import xmldefs
+from pycalendar.plaintextvalue import PyCalendarPlainTextValue
+from pycalendar.value import PyCalendarValue
 
-class UnknownValue(PlainTextValue):
+class PyCalendarUnknownValue(PyCalendarPlainTextValue):
 
     def getType(self):
-        return UnknownValue.VALUETYPE_UNKNOWN
+        return PyCalendarUnknownValue.VALUETYPE_UNKNOWN
 
-Value.registerType(Value.VALUETYPE_UNKNOWN, UnknownValue, xmldefinitions.value_unknown)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_UNKNOWN, PyCalendarUnknownValue, xmldefs.value_unknown)

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2011-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2011-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 #    limitations under the License.
 ##
 
-class ErrorBase(Exception):
+class PyCalendarError(Exception):
 
     def __init__(self, reason, data=""):
         self.mReason = reason
@@ -22,27 +22,22 @@ class ErrorBase(Exception):
 
 
 
-class InvalidData(ErrorBase):
+class PyCalendarInvalidData(PyCalendarError):
     pass
 
 
 
-class InvalidComponent(ErrorBase):
+class PyCalendarInvalidProperty(PyCalendarError):
     pass
 
 
 
-class InvalidProperty(ErrorBase):
+class PyCalendarValidationError(PyCalendarError):
     pass
 
 
 
-class ValidationError(ErrorBase):
-    pass
-
-
-
-class NoTimezoneInDatabase(Exception):
+class PyCalendarNoTimezoneInDatabase(Exception):
 
     def __init__(self, dbpath, tzid):
         self.mTZDBpath = dbpath

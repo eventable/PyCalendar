@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 #    limitations under the License.
 ##
 
-from pycalendar.parameter import Parameter
-from pycalendar.exceptions import InvalidProperty
+from pycalendar.attribute import PyCalendarAttribute
+from pycalendar.exceptions import PyCalendarInvalidProperty
 from pycalendar.parser import ParserContext
 from pycalendar.vcard.property import Property
 import unittest
@@ -34,14 +34,13 @@ class TestProperty(unittest.TestCase):
         "item1.ADR;type=WORK;type=pref:;;1245 Test;Sesame Street;CA;11111;USA",
         "X-Test:Some\, text.",
         "X-Test;VALUE=URI:geio:123.123,123.123",
-        "X-ABUID:5B77BC10-E9DB-48C4-8BE1-BAB5E38E1E43\\:ABPerson",
-        "X-ABUID:5B77BC10-E9DB-48C4-8BE1-BAB5E38E1E43:ABPerson",
     )
 
     def testParseGenerate(self):
 
         for data in TestProperty.test_data:
-            prop = Property.parseText(data)
+            prop = Property()
+            prop.parse(data)
             propstr = str(prop)
             self.assertEqual(propstr[:-2], data, "Failed parse/generate: %s to %s" % (data, propstr,))
 
@@ -49,8 +48,10 @@ class TestProperty(unittest.TestCase):
     def testEquality(self):
 
         for data in TestProperty.test_data:
-            prop1 = Property.parseText(data)
-            prop2 = Property.parseText(data)
+            prop1 = Property()
+            prop1.parse(data)
+            prop2 = Property()
+            prop2.parse(data)
             self.assertEqual(prop1, prop2, "Failed equality: %s" % (data,))
 
 
@@ -63,7 +64,8 @@ class TestProperty(unittest.TestCase):
         save = ParserContext.INVALID_ESCAPE_SEQUENCES
         for data in test_bad_data:
             ParserContext.INVALID_ESCAPE_SEQUENCES = ParserContext.PARSER_RAISE
-            self.assertRaises(InvalidProperty, Property.parseText, data)
+            prop = Property()
+            self.assertRaises(PyCalendarInvalidProperty, prop.parse, data)
         ParserContext.INVALID_ESCAPE_SEQUENCES = save
 
 
@@ -71,7 +73,8 @@ class TestProperty(unittest.TestCase):
 
         hashes = []
         for item in TestProperty.test_data:
-            prop = Property.parseText(item)
+            prop = Property()
+            prop.parse(item)
             hashes.append(hash(prop))
         hashes.sort()
         for i in range(1, len(hashes)):
@@ -95,17 +98,19 @@ class TestProperty(unittest.TestCase):
     def testParameterEncodingDecoding(self):
 
         prop = Property(name="X-FOO", value="Test")
-        prop.addParameter(Parameter("X-BAR", "\"Check\""))
+        prop.addAttribute(PyCalendarAttribute("X-BAR", "\"Check\""))
         self.assertEqual(str(prop), "X-FOO;X-BAR=^'Check^':Test\r\n")
 
-        prop.addParameter(Parameter("X-BAR2", "Check\nThis\tOut\n"))
+        prop.addAttribute(PyCalendarAttribute("X-BAR2", "Check\nThis\tOut\n"))
         self.assertEqual(str(prop), "X-FOO;X-BAR=^'Check^';X-BAR2=Check^nThis\tOut^n:Test\r\n")
 
         data = "X-FOO;X-BAR=^'Check^':Test"
-        prop = Property.parseText(data)
-        self.assertEqual(prop.getParameterValue("X-BAR"), "\"Check\"")
+        prop = Property()
+        prop.parse(data)
+        self.assertEqual(prop.getAttributeValue("X-BAR"), "\"Check\"")
 
         data = "X-FOO;X-BAR=^'Check^';X-BAR2=Check^nThis\tOut^n:Test"
-        prop = Property.parseText(data)
-        self.assertEqual(prop.getParameterValue("X-BAR"), "\"Check\"")
-        self.assertEqual(prop.getParameterValue("X-BAR2"), "Check\nThis\tOut\n")
+        prop = Property()
+        prop.parse(data)
+        self.assertEqual(prop.getAttributeValue("X-BAR"), "\"Check\"")
+        self.assertEqual(prop.getAttributeValue("X-BAR2"), "Check\nThis\tOut\n")

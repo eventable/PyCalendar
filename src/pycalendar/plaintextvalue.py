@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
 #    limitations under the License.
 ##
 
-# iCalendar generic text-like value
+# iCalendar UTC Offset value
 
-from pycalendar.value import Value
+from pycalendar.value import PyCalendarValue
 
-class PlainTextValue(Value):
+class PyCalendarPlainTextValue(PyCalendarValue):
 
     def __init__(self, value=''):
         self.mValue = value
@@ -28,7 +28,7 @@ class PlainTextValue(Value):
         return self.__class__(self.mValue)
 
 
-    def parse(self, data, variant):
+    def parse(self, data):
         # No decoding required
         self.mValue = data
 
@@ -45,14 +45,6 @@ class PlainTextValue(Value):
     def writeXML(self, node, namespace):
         value = self.getXMLNode(node, namespace)
         value.text = self.mValue
-
-
-    def parseJSONValue(self, jobject):
-        self.mValue = str(jobject)
-
-
-    def writeJSONValue(self, jobject):
-        jobject.append(self.mValue)
 
 
     def getValue(self):

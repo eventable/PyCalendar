@@ -16,18 +16,18 @@
 
 # iCalendar URI value
 
-from pycalendar import xmldefinitions, utils
-from pycalendar.plaintextvalue import PlainTextValue
-from pycalendar.value import Value
+from pycalendar import xmldefs, utils
+from pycalendar.plaintextvalue import PyCalendarPlainTextValue
+from pycalendar.value import PyCalendarValue
 from pycalendar.parser import ParserContext
 
-class URIValue(PlainTextValue):
+class PyCalendarURIValue(PyCalendarPlainTextValue):
 
     def getType(self):
-        return URIValue.VALUETYPE_URI
+        return PyCalendarURIValue.VALUETYPE_URI
 
 
-    def parse(self, data, variant):
+    def parse(self, data):
 
         if ParserContext.BACKSLASH_IN_URI_VALUE == ParserContext.PARSER_FIX:
             # Decoding required
@@ -50,6 +50,6 @@ class URIValue(PlainTextValue):
             except:
                 pass
         else:
-            super(URIValue, self).generate(os)
+            super(PyCalendarURIValue, self).generate(os)
 
-Value.registerType(Value.VALUETYPE_URI, URIValue, xmldefinitions.value_uri)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_URI, PyCalendarURIValue, xmldefs.value_uri)

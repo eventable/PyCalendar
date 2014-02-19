@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,26 +14,42 @@
 #    limitations under the License.
 ##
 
-from pycalendar import xmldefinitions
-from pycalendar.datetime import DateTime
-from pycalendar.value import Value
-from pycalendar.valueutils import WrapperValue
+from pycalendar import xmldefs
+from pycalendar.datetime import PyCalendarDateTime
+from pycalendar.value import PyCalendarValue
 
-class DateTimeValue(WrapperValue, Value):
+class PyCalendarDateTimeValue(PyCalendarValue):
 
-    _wrappedClass = DateTime
-    _wrappedType = None # Depends on actual value
+    def __init__(self, value=None):
+        self.mValue = value if value is not None else PyCalendarDateTime()
+
+
+    def duplicate(self):
+        return PyCalendarDateTimeValue(self.mValue.duplicate())
+
 
     def getType(self):
-        return  (Value.VALUETYPE_DATETIME, Value.VALUETYPE_DATE)[self.mValue.isDateOnly()]
+        return  (PyCalendarValue.VALUETYPE_DATETIME, PyCalendarValue.VALUETYPE_DATE)[self.mValue.isDateOnly()]
 
 
-    def parse(self, data, variant):
-        self.mValue.parse(data, fullISO=(variant == "vcard"))
+    def parse(self, data, fullISO=False):
+        self.mValue.parse(data, fullISO)
+
+
+    def generate(self, os):
+        self.mValue.generate(os)
 
 
     def writeXML(self, node, namespace):
         self.mValue.writeXML(node, namespace)
 
-Value.registerType(Value.VALUETYPE_DATE, DateTimeValue, xmldefinitions.value_date)
-Value.registerType(Value.VALUETYPE_DATETIME, DateTimeValue, xmldefinitions.value_date_time)
+
+    def getValue(self):
+        return self.mValue
+
+
+    def setValue(self, value):
+        self.mValue = value
+
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_DATE, PyCalendarDateTimeValue, xmldefs.value_date)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_DATETIME, PyCalendarDateTimeValue, xmldefs.value_date_time)

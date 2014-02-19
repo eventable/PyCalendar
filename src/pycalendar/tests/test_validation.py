@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2011-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2011-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 #    limitations under the License.
 ##
 
-from pycalendar.icalendar.property import Property
+from pycalendar.property import PyCalendarProperty
 from pycalendar.validation import partial, PropertyValueChecks
 import unittest
 
@@ -40,7 +40,8 @@ class TestValidation(unittest.TestCase):
         )
 
         for prop, test, result in props:
-            property = Property.parseText(prop)
+            property = PyCalendarProperty()
+            property.parse(prop)
             self.assertEqual(PropertyValueChecks.stringValue(test, property), result)
 
 
@@ -54,7 +55,8 @@ class TestValidation(unittest.TestCase):
         )
 
         for prop, result in props:
-            property = Property.parseText(prop)
+            property = PyCalendarProperty()
+            property.parse(prop)
             self.assertEqual(PropertyValueChecks.alwaysUTC(property), result)
 
 
@@ -70,7 +72,8 @@ class TestValidation(unittest.TestCase):
         )
 
         for prop, low, high, result in props:
-            property = Property.parseText(prop)
+            property = PyCalendarProperty()
+            property.parse(prop)
             self.assertEqual(PropertyValueChecks.numericRange(low, high, property), result)
 
 
@@ -84,5 +87,6 @@ class TestValidation(unittest.TestCase):
         )
 
         for prop, result in props:
-            property = Property.parseText(prop)
+            property = PyCalendarProperty()
+            property.parse(prop)
             self.assertEqual(PropertyValueChecks.positiveIntegerOrZero(property), result)

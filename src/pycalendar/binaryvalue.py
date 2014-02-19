@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2011-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2011-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 # iCalendar Binary value
 
-from pycalendar import xmldefinitions
-from pycalendar.plaintextvalue import PlainTextValue
-from pycalendar.value import Value
+from pycalendar import xmldefs
+from pycalendar.plaintextvalue import PyCalendarPlainTextValue
+from pycalendar.value import PyCalendarValue
 
-class BinaryValue(PlainTextValue):
+class PyCalendarBinaryValue(PyCalendarPlainTextValue):
 
     def getType(self):
-        return Value.VALUETYPE_BINARY
+        return PyCalendarValue.VALUETYPE_BINARY
 
-Value.registerType(Value.VALUETYPE_BINARY, BinaryValue, xmldefinitions.value_binary)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_BINARY, PyCalendarBinaryValue, xmldefs.value_binary)

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,14 +14,42 @@
 #    limitations under the License.
 ##
 
-from pycalendar import xmldefinitions
-from pycalendar.duration import Duration
-from pycalendar.value import Value
-from pycalendar.valueutils import WrapperValue
+from pycalendar import xmldefs
+from pycalendar.duration import PyCalendarDuration
+from pycalendar.value import PyCalendarValue
 
-class DurationValue(WrapperValue, Value):
+class PyCalendarDurationValue(PyCalendarValue):
 
-    _wrappedClass = Duration
-    _wrappedType = Value.VALUETYPE_DURATION
+    def __init__(self, value=None):
+        self.mValue = value if value is not None else PyCalendarDuration()
 
-Value.registerType(Value.VALUETYPE_DURATION, DurationValue, xmldefinitions.value_duration)
+
+    def duplicate(self):
+        return PyCalendarDurationValue(self.mValue.duplicate())
+
+
+    def getType(self):
+        return PyCalendarValue.VALUETYPE_DURATION
+
+
+    def parse(self, data):
+        self.mValue.parse(data)
+
+
+    def generate(self, os):
+        self.mValue.generate(os)
+
+
+    def writeXML(self, node, namespace):
+        value = self.getXMLNode(node, namespace)
+        value.text = self.mValue.writeXML()
+
+
+    def getValue(self):
+        return self.mValue
+
+
+    def setValue(self, value):
+        self.mValue = value
+
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_DURATION, PyCalendarDurationValue, xmldefs.value_duration)

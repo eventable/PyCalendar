@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
 #    limitations under the License.
 ##
 
-from pycalendar.timezone import Timezone
+from pycalendar.timezone import PyCalendarTimezone
 
-class CalendarManager(object):
+class PyCalendarManager(object):
 
     sICalendarManager = None
 
     def __init__(self):
-        Timezone.sDefaultTimezone = Timezone()
+        PyCalendarTimezone.sDefaultTimezone = PyCalendarTimezone()
 
 
     def initManager(self):
@@ -29,31 +29,31 @@ class CalendarManager(object):
 
         # Eventually we need to read these from prefs - for now they are
         # hard-coded to my personal prefs!
-        self.setDefaultTimezone(Timezone(utc=False, tzid="US/Eastern"))
+        self.setDefaultTimezone(PyCalendarTimezone(utc=False, tzid="US/Eastern"))
 
 
     def setDefaultTimezoneID(self, tzid):
         # Check for UTC
         if tzid == "UTC":
-            temp = Timezone(utc=True)
+            temp = PyCalendarTimezone(utc=True)
             self.setDefaultTimezone(temp)
         else:
-            temp = Timezone(utc=False, tzid=tzid)
+            temp = PyCalendarTimezone(utc=False, tzid=tzid)
             self.setDefaultTimezone(temp)
 
 
     def setDefaultTimezone(self, tzid):
-        Timezone.sDefaultTimezone = tzid
+        PyCalendarTimezone.sDefaultTimezone = tzid
 
 
     def getDefaultTimezoneID(self):
-        if Timezone.sDefaultTimezone.getUTC():
+        if PyCalendarTimezone.sDefaultTimezone.getUTC():
             return "UTC"
         else:
-            return Timezone.sDefaultTimezone.getTimezoneID()
+            return PyCalendarTimezone.sDefaultTimezone.getTimezoneID()
 
 
     def getDefaultTimezone(self):
-        return Timezone.sDefaultTimezone
+        return PyCalendarTimezone.sDefaultTimezone
 
-CalendarManager.sICalendarManager = CalendarManager()
+PyCalendarManager.sICalendarManager = PyCalendarManager()

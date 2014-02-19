@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2007-2013 Cyrus Daboo. All rights reserved.
+#    Copyright (c) 2007-2012 Cyrus Daboo. All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
 #    limitations under the License.
 ##
 
-from pycalendar.value import Value
+from pycalendar.value import PyCalendarValue
 
-class MultiValue(Value):
+class PyCalendarMultiValue(PyCalendarValue):
 
     def __init__(self, type):
 
@@ -29,7 +29,7 @@ class MultiValue(Value):
 
 
     def duplicate(self):
-        other = MultiValue(self.mType)
+        other = PyCalendarMultiValue(self.mType)
         other.mValues = [i.duplicate() for i in self.mValues]
         return other
 
@@ -39,7 +39,7 @@ class MultiValue(Value):
 
 
     def getRealType(self):
-        return Value.VALUETYPE_MULTIVALUE
+        return PyCalendarValue.VALUETYPE_MULTIVALUE
 
 
     def getValue(self):
@@ -57,13 +57,13 @@ class MultiValue(Value):
     def setValue(self, value):
         newValues = []
         for v in value:
-            val = Value.createFromType(self.mType)
-            val.setValue(v)
-            newValues.append(val)
+            pyCalendarValue = PyCalendarValue.createFromType(self.mType)
+            pyCalendarValue.setValue(v)
+            newValues.append(pyCalendarValue)
         self.mValues = newValues
 
 
-    def parse(self, data, variant):
+    def parse(self, data):
         # Tokenize on comma
         if "," in data:
             tokens = data.split(",")
@@ -71,8 +71,8 @@ class MultiValue(Value):
             tokens = (data,)
         for token in tokens:
             # Create single value, and parse data
-            value = Value.createFromType(self.mType)
-            value.parse(token, variant)
+            value = PyCalendarValue.createFromType(self.mType)
+            value.parse(token)
             self.mValues.append(value)
 
 
@@ -93,16 +93,4 @@ class MultiValue(Value):
         for iter in self.mValues:
             iter.writeXML(node, namespace)
 
-
-    def parseJSONValue(self, jobject):
-        for jvalue in jobject:
-            value = Value.createFromType(self.mType)
-            value.parseJSONValue(jvalue)
-            self.mValues.append(value)
-
-
-    def writeJSONValue(self, jobject):
-        for iter in self.mValues:
-            iter.writeJSONValue(jobject)
-
-Value.registerType(Value.VALUETYPE_MULTIVALUE, MultiValue, None)
+PyCalendarValue.registerType(PyCalendarValue.VALUETYPE_MULTIVALUE, PyCalendarMultiValue, None)
